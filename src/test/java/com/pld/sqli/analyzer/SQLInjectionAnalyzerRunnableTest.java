@@ -39,14 +39,11 @@ public class SQLInjectionAnalyzerRunnableTest {
      */
     @Test
     public void testRun() throws Exception {
-        System.out.println(SQLIAnalyzerConfig.getAnalyzerStoragePath());
-        System.out.println(new File(SQLIAnalyzerConfig.getAnalyzerStoragePath()).getAbsolutePath());
-        System.out.println(new File("./target/SQLIAnalyzer/SQLIAnalyzerDiskStorage.xml").exists());
-        System.out.println(new File("./target/SQLIAnalyzer/SQLIAnalyzerDiskStorage.xml").delete());
         List<String> backup = new ArrayList<String>(SQLIAnalyzerConfig.getAnalyzerEntrypointSafezones());
         try {
             // No statement
             SQLInjectionAnalyzerRunnable runnable = new SQLInjectionAnalyzerRunnable("junit", null, null, 0L, 0L, Thread.currentThread());
+            SQLInjectionAnalyzerRunnable.getEntries().clear();
             assertEquals(0, SQLInjectionAnalyzerRunnable.getEntries().size());
             runnable.run();
             assertEquals(0, SQLInjectionAnalyzerRunnable.getEntries().size());
