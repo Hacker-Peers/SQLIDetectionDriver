@@ -1,9 +1,0 @@
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\wrapper\StatementWrapperTest.java
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\wrapper\CallableStatementWrapperTest.java
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\analyzer\SQLInjectionAnalyzerEntryTest.java
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\wrapper\PreparedStatementWrapperTest.java
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\config\SQLIAnalyzerConfigTest.java
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\driver\AnalyzerDriverTest.java
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\analyzer\SQLInjectionAnalyzerRunnableTest.java
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\wrapper\ConnectionWrapperTest.java
-D:\pldupont\workspace\SQLIDetectionDriver\src\test\java\com\pld\sqli\analyzer\SQLInjectionAnalyzerTest.java
