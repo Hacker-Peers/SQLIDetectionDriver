@@ -41,7 +41,7 @@ public class SQLInjectionAnalyzerRunnableTest {
     public void testRun() throws Exception {
         System.out.println(SQLIAnalyzerConfig.getAnalyzerStoragePath());
         System.out.println(new File(SQLIAnalyzerConfig.getAnalyzerStoragePath()).getAbsolutePath());
-        new File("./target/SQLIAnalyzer/SQLIAnalyzerDiskStorage.xml").delete();
+        System.out.println(new File("./target/SQLIAnalyzer/SQLIAnalyzerDiskStorage.xml").delete());
         List<String> backup = new ArrayList<String>(SQLIAnalyzerConfig.getAnalyzerEntrypointSafezones());
         try {
             // No statement
