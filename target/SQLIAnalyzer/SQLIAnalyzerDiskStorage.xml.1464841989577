@@ -1,0 +1,73 @@
+<tree-map>
+  <entry>
+    <string>abc</string>
+    <tree-map>
+      <entry>
+        <string>select1</string>
+        <com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+          <statement>select1</statement>
+          <variationINClause class="sorted-set">
+            <int>0</int>
+          </variationINClause>
+          <occurence>1</occurence>
+        </com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+      </entry>
+    </tree-map>
+  </entry>
+  <entry>
+    <string>com.pld.sqli.demo.test.Test#doSomething()</string>
+    <tree-map>
+      <entry>
+        <string>select sysdate from dual</string>
+        <com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+          <statement>select sysdate from dual</statement>
+          <variationINClause class="sorted-set">
+            <int>0</int>
+          </variationINClause>
+          <occurence>1</occurence>
+        </com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+      </entry>
+    </tree-map>
+  </entry>
+  <entry>
+    <string>com.pld.sqli.demo.test2.Test#doSomething()</string>
+    <tree-map>
+      <entry>
+        <string>select sysdate from dual WHERE id IN (?)</string>
+        <com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+          <statement>select sysdate from dual WHERE id IN (?)</statement>
+          <variationINClause class="sorted-set">
+            <int>2</int>
+          </variationINClause>
+          <occurence>1</occurence>
+        </com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+      </entry>
+    </tree-map>
+  </entry>
+  <entry>
+    <string>def</string>
+    <tree-map>
+      <entry>
+        <string>select2</string>
+        <com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+          <statement>select2</statement>
+          <variationINClause class="sorted-set">
+            <int>0</int>
+          </variationINClause>
+          <occurence>1</occurence>
+        </com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+      </entry>
+      <entry>
+        <string>select3</string>
+        <com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+          <statement>select3</statement>
+          <variationINClause class="sorted-set">
+            <int>0</int>
+            <int>1</int>
+          </variationINClause>
+          <occurence>2</occurence>
+        </com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry>
+      </entry>
+    </tree-map>
+  </entry>
+</tree-map>
