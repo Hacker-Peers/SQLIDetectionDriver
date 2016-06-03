@@ -1,36 +1,28 @@
 package com.pld.sqli.wrapper;
 
-import java.lang.reflect.Method;
-import java.net.MalformedURLException;
-import java.util.Arrays;
-import java.util.Map;
-
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-import java.io.InputStream;
-import java.io.Reader;
 import com.pld.sqli.analyzer.SQLInjectionAnalyzer;
 import mockit.Expectations;
-import java.sql.NClob;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
+import org.junit.Test;
+
+import java.io.InputStream;
+import java.io.Reader;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.*;
+import java.util.Arrays;
 import java.util.Calendar;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.Ref;
-import java.sql.RowId;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import static mockit.Deencapsulation.*;
+
+import static mockit.Deencapsulation.getField;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Test methods in PreparedStatementWrapper class.
@@ -69,7 +61,7 @@ public class PreparedStatementWrapperTest {
         };
         List<String> excluded = Arrays.asList(
                 "setPoolable", "setFetchSize", "setFetchDirection", "setCursorName",
-                "setQueryTimeout", "setEscapeProcessing", "setMaxRows", "setMaxFieldSize");
+                "setQueryTimeout", "setEscapeProcessing", "setMaxRows", "setLargeMaxRows", "setMaxFieldSize");
         Method[] methods = PreparedStatementWrapper.class.getMethods();
         PreparedStatementWrapper wrapper = new PreparedStatementWrapper(ps, "select 1 from dual");
         int index = 1;

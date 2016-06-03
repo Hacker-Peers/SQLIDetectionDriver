@@ -3,7 +3,6 @@ package com.pld.sqli.driver;
 import com.pld.sqli.config.SQLIAnalyzerConfig;
 import com.pld.sqli.wrapper.ConnectionWrapper;
 import mockit.Expectations;
-import mockit.MockUp;
 import mockit.Mocked;
 import org.junit.Test;
 
@@ -12,7 +11,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static mockit.Deencapsulation.*;
@@ -191,5 +189,21 @@ public class AnalyzerDriverTest {
         AnalyzerDriver instance = new AnalyzerDriver();
         setField(AnalyzerDriver.class, "realDriver", driver);
         instance.jdbcCompliant();
+    }
+
+    /**
+     * Test of jdbcCompliant method, of class AnalyzerDriver.
+     */
+    @Test
+    public void testJdbcCompliant(@Mocked final Driver driver, @Mocked final Logger logger) throws Exception {
+        new Expectations() {
+            {
+                driver.getParentLogger();
+                result = logger;
+                times = 1;
+            }
+        };
+        AnalyzerDriver instance = new AnalyzerDriver();
+        assertTrue(instance.getParentLogger() == logger);
     }
 }

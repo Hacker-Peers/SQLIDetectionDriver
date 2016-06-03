@@ -86,4 +86,9 @@ public class AnalyzerDriver implements Driver {
     public boolean jdbcCompliant() {
         return realDriver.jdbcCompliant();
     }
+
+    @Override
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        return realDriver.getParentLogger();
+    }
 }

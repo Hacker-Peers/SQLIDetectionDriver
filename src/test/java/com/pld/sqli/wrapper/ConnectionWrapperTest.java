@@ -1,22 +1,18 @@
 package com.pld.sqli.wrapper;
 
-import com.pld.sqli.wrapper.StatementWrapper;
-import com.pld.sqli.wrapper.PreparedStatementWrapper;
-import com.pld.sqli.wrapper.ConnectionWrapper;
 import mockit.Expectations;
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.SQLWarning;
-import java.sql.Savepoint;
-import java.sql.Statement;
-import java.util.Map;
-import java.util.Properties;
-
 import mockit.Mocked;
 import org.junit.Test;
+
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.util.Properties;
+import java.util.concurrent.Executor;
+
+import static mockit.Deencapsulation.getField;
 import static org.junit.Assert.*;
-import static mockit.Deencapsulation.*;
 
 /**
  * Test methods in ConnectionWrapper class.
@@ -840,5 +836,87 @@ public class ConnectionWrapperTest {
         };
         ConnectionWrapper instance = new ConnectionWrapper(conn);
         instance.isWrapperFor(Object.class);
+    }
+
+    /**
+     * Test of setSchema method, of class ConnectionWrapper.
+     */
+    @Test
+    public void testSetSchema(@Mocked final Connection conn) throws Exception {
+        new Expectations() {
+
+            {
+                conn.setSchema("abc");
+                times = 1;
+            }
+        };
+        ConnectionWrapper instance = new ConnectionWrapper(conn);
+        instance.setSchema("abc");
+    }
+
+    /**
+     * Test of getSchema method, of class ConnectionWrapper.
+     */
+    @Test
+    public void testGetSchema(@Mocked final Connection conn) throws Exception {
+        new Expectations() {
+
+            {
+                conn.getSchema();
+                result = "abc";
+                times = 1;
+            }
+        };
+        ConnectionWrapper instance = new ConnectionWrapper(conn);
+        assertEquals("abc", instance.getSchema());
+    }
+
+    /**
+     * Test of abort method, of class ConnectionWrapper.
+     */
+    @Test
+    public void testAbort(@Mocked final Connection conn) throws Exception {
+        new Expectations() {
+
+            {
+                conn.abort((Executor) null);
+                times = 1;
+            }
+        };
+        ConnectionWrapper instance = new ConnectionWrapper(conn);
+        instance.abort(null);
+    }
+
+    /**
+     * Test of setNetworkTimeout method, of class ConnectionWrapper.
+     */
+    @Test
+    public void testSetNetworkTimeout(@Mocked final Connection conn) throws Exception {
+        new Expectations() {
+
+            {
+                conn.setNetworkTimeout((Executor) null, 12345);
+                times = 1;
+            }
+        };
+        ConnectionWrapper instance = new ConnectionWrapper(conn);
+        instance.setNetworkTimeout(null, 12345);
+    }
+
+    /**
+     * Test of getNetworkTimeout method, of class ConnectionWrapper.
+     */
+    @Test
+    public void testGetNetworkTimeout(@Mocked final Connection conn) throws Exception {
+        new Expectations() {
+
+            {
+                conn.getNetworkTimeout();
+                result = 123456;
+                times = 1;
+            }
+        };
+        ConnectionWrapper instance = new ConnectionWrapper(conn);
+        assertEquals(123456, instance.getNetworkTimeout());
     }
 }

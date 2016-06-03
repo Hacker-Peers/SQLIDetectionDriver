@@ -1,25 +1,19 @@
 package com.pld.sqli.wrapper;
 
 import com.pld.sqli.analyzer.SQLInjectionAnalyzer;
+import mockit.Expectations;
+import mockit.Mocked;
+import org.junit.Test;
+
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.NClob;
-import java.sql.RowId;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.Calendar;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Test;
 
 /**
  * Test methods in CallableStatementWrapper class.
@@ -1219,9 +1213,13 @@ public class CallableStatementWrapperTest {
                 times = 1;
                 ps.getObject(1);
                 times = 1;
-                ps.getObject("p1", null);
+                ps.getObject("p1", (Class) null);
                 times = 1;
-                ps.getObject(1, null);
+                ps.getObject(1, (Class) null);
+                times = 1;
+                ps.getObject("p1", (Map<String, Class<?>>) null);
+                times = 1;
+                ps.getObject(1, (Map<String, Class<?>>) null);
                 times = 1;
             }
         };
@@ -1229,8 +1227,10 @@ public class CallableStatementWrapperTest {
         CallableStatementWrapper wrapper = new CallableStatementWrapper(ps, "select 1 from dual");
         wrapper.getObject("p1");
         wrapper.getObject(1);
-        wrapper.getObject("p1", null);
-        wrapper.getObject(1, null);
+        wrapper.getObject("p1", (Class) null);
+        wrapper.getObject(1, (Class) null);
+        wrapper.getObject("p1", (Map<String, Class<?>>) null);
+        wrapper.getObject(1, (Map<String, Class<?>>) null);
     }
 
     /**
