@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNotNull;
  * Test methods in PreparedStatementWrapper class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class PreparedStatementWrapperTest {
+public class PreparedStatementWrapperJMockitTest {
 
     /**
      * Test that all setter store the parameter in the Analyzer cache.

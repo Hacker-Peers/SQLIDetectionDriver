@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  * Test methods in StatementWrapper class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class StatementWrapperTest {
+public class StatementWrapperJMockitTest {
 
     /**
      * Test of executeQuery method, of class StatementWrapper.

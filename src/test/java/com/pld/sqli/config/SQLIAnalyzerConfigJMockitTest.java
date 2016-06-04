@@ -20,7 +20,7 @@ import static mockit.Deencapsulation.*;
  * Test methods in SQLIAnalyzerConfig class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class SQLIAnalyzerConfigTest {
+public class SQLIAnalyzerConfigJMockitTest {
     
     @After
     public void tearDown() {

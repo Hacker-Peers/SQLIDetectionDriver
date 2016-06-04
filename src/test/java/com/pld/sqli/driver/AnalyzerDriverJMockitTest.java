@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class AnalyzerDriverTest {
+public class AnalyzerDriverJMockitTest {
 
     /**
      * Test of initialize method, of class AnalyzerDriver.

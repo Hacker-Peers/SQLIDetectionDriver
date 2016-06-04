@@ -7,7 +7,7 @@ import static org.junit.Assert.*;
  * Test methods in SQLInjectionAnalyzerEntry class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class SQLInjectionAnalyzerEntryTest {
+public class SQLInjectionAnalyzerEntryJMockitTest {
     
     /**
      * Test constructor, of class SQLInjectionAnalyzerEntry.

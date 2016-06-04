@@ -28,7 +28,7 @@ import static mockit.Deencapsulation.*;
  * Test methods in SQLInjectionAnalyzerRunnable class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class SQLInjectionAnalyzerRunnableTest {
+public class SQLInjectionAnalyzerRunnableJMockitTest {
 
     @After
     public void tearDown() {

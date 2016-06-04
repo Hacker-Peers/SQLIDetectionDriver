@@ -24,7 +24,7 @@ import static org.junit.Assert.assertNotNull;
  * Test methods in SQLInjectionAnalyzer class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class SQLInjectionAnalyzerTest {
+public class SQLInjectionAnalyzerJMockitTest {
 
     private ExecutorService realThreadPool;
 

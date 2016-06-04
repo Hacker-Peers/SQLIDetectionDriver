@@ -18,7 +18,7 @@ import static org.junit.Assert.*;
  * Test methods in ConnectionWrapper class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class ConnectionWrapperTest {
+public class ConnectionWrapperJMockitTest {
 
     /**
      * Test of createStatement method, of class ConnectionWrapper.
