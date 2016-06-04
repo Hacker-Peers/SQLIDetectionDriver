@@ -1,17 +1,13 @@
 package com.pld.sqli.wrapper;
 
-import com.pld.sqli.wrapper.StatementWrapper;
-import com.pld.sqli.wrapper.ConnectionWrapper;
-import java.util.ArrayList;
 import com.pld.sqli.analyzer.SQLInjectionAnalyzer;
 import mockit.Expectations;
-import java.sql.Statement;
-import java.util.List;
-
 import mockit.Mocked;
-import mockit.integration.junit4.JMockit;
 import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -821,5 +817,38 @@ public class StatementWrapperTest {
     public void testGetBatchSQL(@Mocked final Statement s) throws Exception {
         StatementWrapper wrapper = new StatementWrapper(s);
         assertEquals(0, wrapper.getBatchSQL().size());
+    }
+
+    /**
+     * Test of isCloseOnCompletion method, of class StatementWrapper.
+     */
+    @Test
+    public void testIsCloseOnCompletion(@Mocked final Statement s) throws Exception {
+        new Expectations() {
+            {
+                s.isCloseOnCompletion();
+                result = true;
+                times = 1;
+            }
+        };
+
+        StatementWrapper wrapper = new StatementWrapper(s);
+        assertTrue(wrapper.isCloseOnCompletion());
+    }
+
+    /**
+     * Test of closeOnCompletion method, of class StatementWrapper.
+     */
+    @Test
+    public void testCloseOnCompletion(@Mocked final Statement s) throws Exception {
+        new Expectations() {
+            {
+                s.closeOnCompletion();
+                times = 1;
+            }
+        };
+
+        StatementWrapper wrapper = new StatementWrapper(s);
+        wrapper.closeOnCompletion();
     }
 }

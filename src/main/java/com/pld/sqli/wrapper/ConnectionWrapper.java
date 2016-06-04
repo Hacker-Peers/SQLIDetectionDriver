@@ -268,4 +268,28 @@ public class ConnectionWrapper implements Connection {
         return realConn.isWrapperFor(type);
     }
 
+    @Override
+    public void setSchema(String schema) throws SQLException {
+        realConn.setSchema(schema);
+    }
+
+    @Override
+    public String getSchema() throws SQLException {
+        return realConn.getSchema();
+    }
+
+    @Override
+    public void abort(Executor executor) throws SQLException {
+        realConn.abort(executor);
+    }
+
+    @Override
+    public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
+        realConn.setNetworkTimeout(executor, milliseconds);
+    }
+
+    @Override
+    public int getNetworkTimeout() throws SQLException {
+       return realConn.getNetworkTimeout();
+    }
 }

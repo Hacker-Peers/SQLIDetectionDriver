@@ -261,6 +261,16 @@ public class CallableStatementWrapper extends PreparedStatementWrapper implement
     }
 
     @Override
+    public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
+        return realCallableStatement.getObject(parameterIndex, type);
+    }
+
+    @Override
+    public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
+        return realCallableStatement.getObject(parameterName, type);
+    }
+
+    @Override
     public void setCharacterStream(String paramName, Reader reader, int i1) throws SQLException {
         addParams(paramName, String.format("[CharacterStream-Reader-%s]", i1));
         realCallableStatement.setCharacterStream(paramName, reader, i1);

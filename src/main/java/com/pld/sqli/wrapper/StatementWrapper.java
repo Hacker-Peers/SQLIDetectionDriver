@@ -296,4 +296,14 @@ public class StatementWrapper implements Statement {
     protected List<String> getBatchSQL() {
         return batchSQL;
     }
+
+    @Override
+    public boolean isCloseOnCompletion() throws SQLException {
+        return realStatement.isCloseOnCompletion();
+    }
+
+    @Override
+    public void closeOnCompletion() throws SQLException {
+        realStatement.closeOnCompletion();
+    }
 }
