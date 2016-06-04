@@ -1,10 +1,8 @@
 package com.pld.sqli.wrapper;
 
 import com.pld.sqli.analyzer.SQLInjectionAnalyzer;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-import org.junit.Test;
+
+import org.testng.annotations.Test;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -12,7 +10,17 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Array;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.NClob;
+import java.sql.PreparedStatement;
+import java.sql.Ref;
+import java.sql.RowId;
+import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -20,9 +28,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
+
 import static mockit.Deencapsulation.getField;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
 
 /**
  * Test methods in PreparedStatementWrapper class.

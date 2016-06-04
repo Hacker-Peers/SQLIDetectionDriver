@@ -1,8 +1,6 @@
 package com.pld.sqli.wrapper;
 
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -11,8 +9,13 @@ import java.sql.Statement;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
+import mockit.Expectations;
+import mockit.Mocked;
+
 import static mockit.Deencapsulation.getField;
-import static org.junit.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * Test methods in ConnectionWrapper class.

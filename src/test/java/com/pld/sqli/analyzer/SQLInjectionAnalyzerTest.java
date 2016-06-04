@@ -1,12 +1,10 @@
 package com.pld.sqli.analyzer;
 
 import com.pld.sqli.config.SQLIAnalyzerConfig;
-import mockit.Expectations;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -16,9 +14,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static mockit.Deencapsulation.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import mockit.Expectations;
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
+
+import static mockit.Deencapsulation.getField;
+import static mockit.Deencapsulation.invoke;
+import static mockit.Deencapsulation.newInstance;
+import static mockit.Deencapsulation.setField;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+
 
 /**
  * Test methods in SQLInjectionAnalyzer class.
@@ -28,12 +34,12 @@ public class SQLInjectionAnalyzerTest {
 
     private ExecutorService realThreadPool;
 
-    @Before
+    @BeforeMethod
     public void setUp() {
         realThreadPool = getField(SQLInjectionAnalyzer.class, "analyzerPool");
     }
 
-    @After
+    @AfterMethod
     public void tearDown() {
         setField(SQLInjectionAnalyzer.class, "analyzerPool", realThreadPool);
     }

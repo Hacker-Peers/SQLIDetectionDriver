@@ -2,9 +2,8 @@ package com.pld.sqli.driver;
 
 import com.pld.sqli.config.SQLIAnalyzerConfig;
 import com.pld.sqli.wrapper.ConnectionWrapper;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Test;
+
+import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,9 +12,14 @@ import java.sql.Driver;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import static mockit.Deencapsulation.*;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import mockit.Expectations;
+import mockit.Mocked;
+
+import static mockit.Deencapsulation.getField;
+import static mockit.Deencapsulation.invoke;
+import static mockit.Deencapsulation.setField;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * Test methods in AnalyzerDriver class.

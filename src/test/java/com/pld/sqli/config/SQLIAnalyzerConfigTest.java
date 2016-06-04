@@ -1,20 +1,28 @@
 package com.pld.sqli.config;
 
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import mockit.Mocked;
-import org.junit.After;
-import java.io.InputStream;
-import mockit.NonStrictExpectations;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import mockit.Expectations;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import static mockit.Deencapsulation.*;
+import mockit.Mocked;
+import mockit.NonStrictExpectations;
+
+import static mockit.Deencapsulation.invoke;
+import static mockit.Deencapsulation.newInstance;
+import static mockit.Deencapsulation.setField;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertFalse;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
 
 /**
  * Test methods in SQLIAnalyzerConfig class.
@@ -22,7 +30,7 @@ import static mockit.Deencapsulation.*;
  */
 public class SQLIAnalyzerConfigTest {
     
-    @After
+    @AfterMethod
     public void tearDown() {
         setField(SQLIAnalyzerConfig.class, "initialized", false);
         setField(SQLIAnalyzerConfig.class, "propertiesFile", "SQLIAnalyzer.properties");
@@ -209,7 +217,7 @@ public class SQLIAnalyzerConfigTest {
     /**
      * Test of getAnalyzerEntrypointSafezones method, of class SQLIAnalyzerConfig.
      */
-    @Test(expected=UnsupportedOperationException.class)
+    @Test(expectedExceptions=UnsupportedOperationException.class)
     public void testGetAnalyzerEntrypointSafezones_TryToModify() {
         SQLIAnalyzerConfig.getAnalyzerEntrypointSafezones().add("1");
     }
@@ -229,7 +237,7 @@ public class SQLIAnalyzerConfigTest {
     /**
      * Test of getAnalyzerRegexSimplifiers method, of class SQLIAnalyzerConfig.
      */
-    @Test(expected=UnsupportedOperationException.class)
+    @Test(expectedExceptions=UnsupportedOperationException.class)
     public void testGetAnalyzerRegexSimplifiers_TryToModify() {
         SQLIAnalyzerConfig.getAnalyzerRegexSimplifiers().put("1", "2");
     }

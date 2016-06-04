@@ -1,15 +1,21 @@
 package com.pld.sqli.wrapper;
 
 import com.pld.sqli.analyzer.SQLInjectionAnalyzer;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Test;
+
+import org.testng.annotations.Test;
 
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import mockit.Expectations;
+import mockit.Mocked;
+
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNull;
+import static org.testng.AssertJUnit.assertTrue;
+import static org.testng.internal.junit.ArrayAsserts.assertArrayEquals;
+
 
 /**
  * Test methods in StatementWrapper class.

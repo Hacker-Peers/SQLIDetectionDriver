@@ -1,28 +1,22 @@
 package com.pld.sqli.analyzer;
 
-import java.util.logging.Logger;
-import java.io.IOException;
+import com.pld.sqli.config.SQLIAnalyzerConfig;
 
-import com.pld.sqli.driver.AnalyzerDriver;
-import mockit.Expectations;
-import java.util.ArrayList;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.Test;
+
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import mockit.Injectable;
-import mockit.Mocked;
-import mockit.NonStrictExpectations;
-import org.junit.After;
-import com.pld.sqli.config.SQLIAnalyzerConfig;
 import java.util.logging.Level;
 
-import org.junit.Ignore;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import static mockit.Deencapsulation.*;
+import static mockit.Deencapsulation.invoke;
+import static mockit.Deencapsulation.setField;
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 /**
  * Test methods in SQLInjectionAnalyzerRunnable class.
@@ -30,7 +24,7 @@ import static mockit.Deencapsulation.*;
  */
 public class SQLInjectionAnalyzerRunnableTest {
 
-    @After
+    @AfterMethod
     public void tearDown() {
         setField(SQLIAnalyzerConfig.class, "initialized", false);
         invoke(SQLIAnalyzerConfig.class, "initialize");
@@ -39,8 +33,7 @@ public class SQLInjectionAnalyzerRunnableTest {
     /**
      * Test of run method, of class SQLInjectionAnalyzerRunnable.
      */
-    @Test
-    @Ignore("Fleaky test that is working locally but not on the remote build server.")
+    @Test(enabled=false) //Flaky test that is working locally but not on the remote build server.
     public void testRun() throws Exception {
         new File("./target/SQLIAnalyzer/SQLIAnalyzerDiskStorage.xml").delete();
         List<String> backup = new ArrayList<String>(SQLIAnalyzerConfig.getAnalyzerEntrypointSafezones());
@@ -152,8 +145,7 @@ public class SQLInjectionAnalyzerRunnableTest {
     /**
      * Test of getEntries method, of class SQLInjectionAnalyzer.
      */
-    @Test
-    @Ignore("Fleaky test that is working locally but not on the remote build server.")
+    @Test(enabled=false) //Flaky test that is working locally but not on the remote build server.
     public void testGetEntries() throws Exception {
         setField(SQLIAnalyzerConfig.class, "analyzerUseDiskStorage", false);
         setField(SQLIAnalyzerConfig.class, "analyzerMaxSizeInMemory", 5);

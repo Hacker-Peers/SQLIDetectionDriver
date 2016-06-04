@@ -1,19 +1,29 @@
 package com.pld.sqli.wrapper;
 
 import com.pld.sqli.analyzer.SQLInjectionAnalyzer;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.Test;
+
+import org.testng.annotations.Test;
 
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.*;
+import java.sql.Blob;
+import java.sql.CallableStatement;
+import java.sql.Clob;
+import java.sql.Date;
+import java.sql.NClob;
+import java.sql.RowId;
+import java.sql.SQLXML;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import mockit.Expectations;
+import mockit.Mocked;
 
 /**
  * Test methods in CallableStatementWrapper class.
