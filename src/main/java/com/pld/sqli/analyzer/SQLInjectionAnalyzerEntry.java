@@ -1,8 +1,10 @@
 package com.pld.sqli.analyzer;
 
+import org.apache.commons.lang3.StringUtils;
+
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Entry to distinguish different statement for the same entry point.
@@ -11,19 +13,33 @@ import org.apache.commons.lang3.StringUtils;
 public class SQLInjectionAnalyzerEntry {
 
     // Attributes
+    private String entryPoint;
     private String statement;
-    private Set<Integer> variationINClause = new TreeSet<Integer>();
-    private int occurence = 0;
+    private Set<Integer> variationINClause = new TreeSet<>();
+    private int occurrence = 1;
 
     /**
      * Constructor for statement containing IN clause.
+     * @deprecated Should used {@link #SQLInjectionAnalyzerEntry(String, String, int)} instead.
      * @param statement The base statement for this entry.
      * @param variationINClause The IN clause variation count.
      */
+    @Deprecated
     public SQLInjectionAnalyzerEntry(String statement, int variationINClause) {
         this.statement = statement;
         this.variationINClause.add(variationINClause);
-        this.occurence = 1;
+    }
+
+    /**
+     * Constructor for statement containing IN clause.
+     * @param entryPoint The entry point of the statement.
+     * @param statement The base statement for this entry.
+     * @param variationINClause The IN clause variation count.
+     */
+    public SQLInjectionAnalyzerEntry(String entryPoint, String statement, int variationINClause) {
+        this(statement, variationINClause);
+
+        this.entryPoint = entryPoint;
     }
 
     /**
@@ -31,17 +47,24 @@ public class SQLInjectionAnalyzerEntry {
      * @param variationINClause The IN clause variation number.
      */
     void addStatementCall(int variationINClause) {
-        this.occurence++;
+        this.occurrence++;
         this.variationINClause.add(variationINClause);
     }
 
     /**
-     * Add the statement invocation count.
-     * @param variationINClause The IN clause variation number.
+     * Merge the SQLInjectionAnalyzerEntry.
+     * @param toMerge the other SQLInjectionAnalyzerEntry to merge into this one.
      */
     void mergeStatementCall(SQLInjectionAnalyzerEntry toMerge) {
-        this.occurence += toMerge.occurence;
+        this.occurrence += toMerge.occurrence;
         this.variationINClause.addAll(toMerge.variationINClause);
+    }
+
+    /**
+     * @return The entry point for the statement that is analyzed.
+     */
+    public String getEntryPoint() {
+        return entryPoint;
     }
 
     /**
@@ -62,7 +85,7 @@ public class SQLInjectionAnalyzerEntry {
      * @return The number of occurrences that this statement was called.
      */
     public int getCount() {
-        return this.occurence;
+        return this.occurrence;
     }
 
     @Override
@@ -80,14 +103,15 @@ public class SQLInjectionAnalyzerEntry {
             return false;
         }
         final SQLInjectionAnalyzerEntry other = (SQLInjectionAnalyzerEntry) obj;
-        if ((this.statement == null) ? (other.statement != null) : !this.statement.equals(other.statement)) {
-            return false;
-        }
-        return true;
+
+        return Objects.equals(this.statement, other.statement)
+                && Objects.equals(this.entryPoint, other.entryPoint);
     }
 
     @Override
     public int hashCode() {
-        return (this.statement != null ? this.statement.hashCode() : 0);
+        int result = statement != null ? statement.hashCode() : 0;
+        result = 31 * result + (entryPoint != null ? entryPoint.hashCode() : 0);
+        return result;
     }
 }
