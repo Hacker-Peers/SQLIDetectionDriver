@@ -1,5 +1,7 @@
 package com.pld.sqli.analyzer;
 
+import com.google.common.base.MoreObjects;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
@@ -90,11 +92,15 @@ public class SQLInjectionAnalyzerEntry {
 
     @Override
     public String toString() {
-        return "SQLInjectionAnalyzerEntry{" + "statement=" + statement + '}';
+        return "SQLInjectionAnalyzerEntry{entryPoint=" + entryPoint + " statement=" + statement + '}';
     }
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
         if (obj == null) {
             return false;
         }
@@ -110,8 +116,8 @@ public class SQLInjectionAnalyzerEntry {
 
     @Override
     public int hashCode() {
-        int result = statement != null ? statement.hashCode() : 0;
-        result = 31 * result + (entryPoint != null ? entryPoint.hashCode() : 0);
+        int result = MoreObjects.firstNonNull(statement, "").hashCode();
+        result = 31 * result + MoreObjects.firstNonNull(entryPoint, "").hashCode();
         return result;
     }
 }
