@@ -4,7 +4,7 @@ package com.pld.sqli.analyzer;
  * Test methods in SQLInjectionAnalyzerRunnable class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class SQLInjectionAnalyzerRunnableTest {
+public class SQLInjectionAnalyzerRunnableJMockitTest {
 //
 //    @AfterMethod
 //    public void tearDown() {

@@ -4,7 +4,7 @@ package com.pld.sqli.wrapper;
  * Test methods in CallableStatementWrapper class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class CallableStatementWrapperTest {
+public class CallableStatementWrapperJMockitTest {
 //
 //    /**
 //     * Test of setNull method, of class CallableStatementWrapper.

@@ -7,6 +7,7 @@ import org.testng.annotations.Test;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 
 /**
- * Test methods in StatementWrapper class.
+ * Test methods in PreparedStatementWrapper class.
  *
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
@@ -26,22 +27,22 @@ public class PreparedStatementWrapperTest extends AbstractWrapperTest {
     @DataProvider(name = "methods")
     public Iterator<Object[]> methods() {
         List<Object[]> result = new ArrayList<>();
-        Arrays.asList(Statement.class.getDeclaredMethods())
+        Arrays.asList(PreparedStatement.class.getDeclaredMethods())
                 .stream()
                 // Filter out missing implementation at the moment
-                .filter(m -> !m.getName().contains("Large"))
+                .filter(m -> !m.getName().equals("executeLargeUpdate"))
                 .forEach(m -> result.add(new Object[]{m}));
         return result.iterator();
     }
 
     @Test(dataProvider = "methods")
     public void testWrappedMethodIsCalled(Object wrappedMethod) throws InvocationTargetException, IllegalAccessException, InstantiationException, MalformedURLException, SQLException {
-        Statement mockStatement = mock(Statement.class);
-        StatementWrapper wrapper = new StatementWrapper<Statement>(mock(ISQLInjectionAnalyzer.class), mockStatement);
+        PreparedStatement mockPreparedStatement = mock(PreparedStatement.class);
+        PreparedStatementWrapper wrapper = new PreparedStatementWrapper<PreparedStatement>(mock(ISQLInjectionAnalyzer.class), mockPreparedStatement, "SELECT 1 FROM dual");
         Object[] params = getMethodParams((Method) wrappedMethod);
 
         ((Method) wrappedMethod).invoke(wrapper, params);
 
-        ((Method) wrappedMethod).invoke(verify(mockStatement, times(1)), params);
+        ((Method) wrappedMethod).invoke(verify(mockPreparedStatement, times(1)), params);
     }
 }
