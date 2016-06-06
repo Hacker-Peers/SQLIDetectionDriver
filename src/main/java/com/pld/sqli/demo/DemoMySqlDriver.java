@@ -1,8 +1,12 @@
 package com.pld.sqli.demo;
 
-import com.pld.sqli.analyzer.SQLInjectionAnalyzer;
 import com.pld.sqli.analyzer.SQLInjectionAnalyzerEntry;
+import com.pld.sqli.analyzer.SQLInjectionAnalyzerImpl;
+import com.pld.sqli.driver.AnalyzerDriver;
 import com.thoughtworks.xstream.XStream;
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -11,7 +15,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * Demo to test the SQLJnjectionAnalyzerDriver.
@@ -126,16 +129,16 @@ public class DemoMySqlDriver {
      * @throws Exception If an error occurs while doing the Demo.
      */
     public static void main(String[] args) throws Exception {
-        Logger.getLogger(SQLInjectionAnalyzer.class.getName()).setLevel(Level.FINE);
+        Logger.getLogger(SQLInjectionAnalyzerImpl.class.getName()).setLevel(Level.FINE);
         DemoMySqlDriver demo = new DemoMySqlDriver();
         demo.testSimpleQuery(demo.openSQLIConnection_MySQL());
         demo.testINClauseQuery(demo.openSQLIConnection_MySQL());
         demo.testBatchQuery(demo.openSQLIConnection_MySQL());
 
         Thread.sleep(500L);
-        SQLInjectionAnalyzer.shutdown();
+        AnalyzerDriver.shutdown();
 
-        Map<String, Map<String, SQLInjectionAnalyzerEntry>> result = SQLInjectionAnalyzer.getAllEntries();
+        Map<String, Map<String, SQLInjectionAnalyzerEntry>> result = AnalyzerDriver.getAllEntries();
         System.out.println(new XStream().toXML(result));
     }
 

@@ -1,5 +1,7 @@
 package com.pld.sqli.wrapper;
 
+import com.pld.sqli.analyzer.ISQLInjectionAnalyzer;
+
 import java.sql.*;
 import java.util.Map;
 import java.util.Properties;
@@ -13,29 +15,31 @@ public class ConnectionWrapper implements Connection {
     
     // Attributes.
     private Connection realConn;
+    private ISQLInjectionAnalyzer analyzer;
     
     /**
      * Wrapper constructor on the real connection.
      * @param realConn The real connection.
      */
-    public ConnectionWrapper(Connection realConn) {
+    public ConnectionWrapper(ISQLInjectionAnalyzer analyzer, Connection realConn) {
         super();
         this.realConn = realConn;
+        this.analyzer = analyzer;
     }
 
     @Override
     public Statement createStatement() throws SQLException {
-        return new StatementWrapper(realConn.createStatement());
+        return new StatementWrapper(analyzer, realConn.createStatement());
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
-        return new PreparedStatementWrapper(realConn.prepareStatement(sql), sql);
+        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql), sql);
     }
 
     @Override
     public CallableStatement prepareCall(String sql) throws SQLException {
-        return new CallableStatementWrapper(realConn.prepareCall(sql), sql);
+        return new CallableStatementWrapper(analyzer, realConn.prepareCall(sql), sql);
     }
 
     @Override
@@ -120,12 +124,12 @@ public class ConnectionWrapper implements Connection {
 
     @Override
     public Statement createStatement(int i, int i1) throws SQLException {
-        return new StatementWrapper(realConn.createStatement(i, i1));
+        return new StatementWrapper(analyzer, realConn.createStatement(i, i1));
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int i, int i1) throws SQLException {
-        return new PreparedStatementWrapper(realConn.prepareStatement(sql, i, i1), sql);
+        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i, i1), sql);
     }
 
     @Override
@@ -175,12 +179,12 @@ public class ConnectionWrapper implements Connection {
 
     @Override
     public Statement createStatement(int i, int i1, int i2) throws SQLException {
-        return new StatementWrapper(realConn.createStatement(i, i1, i2));
+        return new StatementWrapper(analyzer, realConn.createStatement(i, i1, i2));
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int i, int i1, int i2) throws SQLException {
-        return new PreparedStatementWrapper(realConn.prepareStatement(sql, i, i1, i2), sql);
+        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i, i1, i2), sql);
     }
 
     @Override
@@ -190,17 +194,17 @@ public class ConnectionWrapper implements Connection {
 
     @Override
     public PreparedStatement prepareStatement(String sql, int i) throws SQLException {
-        return new PreparedStatementWrapper(realConn.prepareStatement(sql, i), sql);
+        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i), sql);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int[] ints) throws SQLException {
-        return new PreparedStatementWrapper(realConn.prepareStatement(sql, ints), sql);
+        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, ints), sql);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, String[] strings) throws SQLException {
-        return new PreparedStatementWrapper(realConn.prepareStatement(sql, strings), sql);
+        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, strings), sql);
     }
 
     @Override

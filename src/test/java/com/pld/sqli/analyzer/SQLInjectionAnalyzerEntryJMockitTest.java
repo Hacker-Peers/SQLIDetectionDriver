@@ -1,105 +1,192 @@
 package com.pld.sqli.analyzer;
 
-import org.junit.Test;
-import static org.junit.Assert.*;
+
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
 
 /**
  * Test methods in SQLInjectionAnalyzerEntry class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class SQLInjectionAnalyzerEntryJMockitTest {
-    
+public class SQLInjectionAnalyzerEntryTest {
+
+    private static final String AN_ENTRY_POINT = "my.entry.point";
+    private static final String ANOTHER_ENTRY_POINT = "another.entry.point";
+    private static final String A_SIMPLE_SQL = "select sysdate from dual";
+    private static final String ANOTHER_SIMPLE_SQL = "select systimestamp from dual";
+    private static final Integer ZERO_VARIATION = 0;
+    private static final Integer ONE_VARIATION = 1;
+    private static final Integer THREE_VARIATIONS = 3;
+
+    private SQLInjectionAnalyzerEntry anEntryWithZeroVariation;
+    private SQLInjectionAnalyzerEntry anotherEntryWithZeroVariation;
+    private SQLInjectionAnalyzerEntry anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree;
+
+    @BeforeMethod
+    public void givenAnEntry() {
+        anEntryWithZeroVariation = new SQLInjectionAnalyzerEntry(AN_ENTRY_POINT, A_SIMPLE_SQL, ZERO_VARIATION);
+
+        anotherEntryWithZeroVariation = new SQLInjectionAnalyzerEntry(AN_ENTRY_POINT, A_SIMPLE_SQL, ZERO_VARIATION);
+
+        anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree = new SQLInjectionAnalyzerEntry(AN_ENTRY_POINT, A_SIMPLE_SQL, ZERO_VARIATION);
+        anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree.addStatementCall(ONE_VARIATION);
+        anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree.addStatementCall(THREE_VARIATIONS);
+    }
+
+
     /**
      * Test constructor, of class SQLInjectionAnalyzerEntry.
      */
     @Test
-    public void testConstructor() {
-        SQLInjectionAnalyzerEntry entry = new SQLInjectionAnalyzerEntry("select sysdate from dual", 0);
-        assertEquals("select sysdate from dual", entry.getStatement());
-        assertEquals("0", entry.getVariationList());
-        assertEquals(1, entry.getCount());
+    public void whenConstructorIsUsedValuesAreAsExpected() {
+        SQLInjectionAnalyzerEntry entry = new SQLInjectionAnalyzerEntry(AN_ENTRY_POINT, A_SIMPLE_SQL, ZERO_VARIATION);
+
+        assertThat(entry.getEntryPoint(), equalTo(AN_ENTRY_POINT));
+        assertThat(entry.getStatement(), equalTo(A_SIMPLE_SQL));
+        assertThat(entry.getVariationList(), equalTo(ZERO_VARIATION.toString()));
+        assertThat(entry.getCount(), equalTo(1));
     }
-    
+
     /**
      * Test of addStatementCall method, of class SQLInjectionAnalyzerEntry.
      */
     @Test
-    public void testAddStatementCall() {
-        SQLInjectionAnalyzerEntry entry = new SQLInjectionAnalyzerEntry("select sysdate from dual", 0);
-        assertEquals("select sysdate from dual", entry.getStatement());
-        assertEquals("0", entry.getVariationList());
-        assertEquals(1, entry.getCount());
-        
-        entry.addStatementCall(0);
-        assertEquals("select sysdate from dual", entry.getStatement());
-        assertEquals("0", entry.getVariationList());
-        assertEquals(2, entry.getCount());
-        
-        entry.addStatementCall(1);
-        assertEquals("select sysdate from dual", entry.getStatement());
-        assertEquals("0,1", entry.getVariationList());
-        assertEquals(3, entry.getCount());
+    public void whenAddingAVariationCountIsIncreasedByOne() {
+        int initialCount = anEntryWithZeroVariation.getCount();
+
+        anEntryWithZeroVariation.addStatementCall(ZERO_VARIATION);
+
+        assertThat(anEntryWithZeroVariation.getCount(), equalTo(initialCount + 1));
     }
 
-    /**
-     * Test of mergeStatementCall method, of class SQLInjectionAnalyzerEntry.
-     */
     @Test
-    public void testMergeStatementCall() {
-        SQLInjectionAnalyzerEntry entry1 = new SQLInjectionAnalyzerEntry("select sysdate from dual", 1);
-        entry1.addStatementCall(2);
-        assertEquals("select sysdate from dual", entry1.getStatement());
-        assertEquals("1,2", entry1.getVariationList());
-        assertEquals(2, entry1.getCount());
+    public void whenAddingAnExistingVariationVariationListIsUnchanged() throws Exception {
+        String initialList = anEntryWithZeroVariation.getVariationList();
 
-        SQLInjectionAnalyzerEntry entry2 = new SQLInjectionAnalyzerEntry("select sysdate from dual", 3);
-        entry2.addStatementCall(4);
-        entry2.addStatementCall(1);
-        assertEquals("select sysdate from dual", entry2.getStatement());
-        assertEquals("1,3,4", entry2.getVariationList());
-        assertEquals(3, entry2.getCount());
-        
-        entry1.mergeStatementCall(entry2);
-        assertEquals("select sysdate from dual", entry1.getStatement());
-        assertEquals("1,2,3,4", entry1.getVariationList());
-        assertEquals(5, entry1.getCount());
+        anEntryWithZeroVariation.addStatementCall(ZERO_VARIATION);
+
+        assertThat(anEntryWithZeroVariation.getVariationList(), equalTo(initialList));
+    }
+
+    @Test
+    public void whenAddingANewVariationVariationListIsUpdated() throws Exception {
+        String initialList = anEntryWithZeroVariation.getVariationList();
+
+        anEntryWithZeroVariation.addStatementCall(ONE_VARIATION);
+
+        assertThat(anEntryWithZeroVariation.getVariationList(), equalTo(initialList + "," + ONE_VARIATION));
+    }
+
+    @Test
+    public void whenMergingEntriesCountsAreAdded() throws Exception {
+        int firstCount = anEntryWithZeroVariation.getCount();
+        int secondCount = anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree.getCount();
+
+        anEntryWithZeroVariation.mergeStatementCall(anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree);
+
+        assertThat(anEntryWithZeroVariation.getCount(), equalTo(firstCount + secondCount));
+    }
+
+    @Test
+    public void whenMergingEntriesUniqueVariationsAreCombined() throws Exception {
+        String expected = String.join(",", ZERO_VARIATION.toString(), ONE_VARIATION.toString(), THREE_VARIATIONS.toString());
+
+        anEntryWithZeroVariation.mergeStatementCall(anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree);
+
+        assertThat(anEntryWithZeroVariation.getVariationList(), equalTo(expected));
     }
 
     /**
      * Test of toString method, of class SQLInjectionAnalyzerEntry.
      */
     @Test
-    public void testToString() {
-        SQLInjectionAnalyzerEntry entry = new SQLInjectionAnalyzerEntry("select sysdate from dual", 1);
-        assertEquals("SQLInjectionAnalyzerEntry{statement=select sysdate from dual}", entry.toString());
+    public void toStringIsAsExpected() {
+        String expected = String.format("SQLInjectionAnalyzerEntry{entryPoint=%s statement=%s}", anEntryWithZeroVariation.getEntryPoint(), anEntryWithZeroVariation.getStatement());
+
+        assertThat(anEntryWithZeroVariation.toString(), equalTo(expected));
     }
 
     /**
      * Test of equals method, of class SQLInjectionAnalyzerEntry.
      */
     @Test
-    public void testEquals() {
-        SQLInjectionAnalyzerEntry entry1 = new SQLInjectionAnalyzerEntry("select sysdate from dual", 1);
-        SQLInjectionAnalyzerEntry entry2 = new SQLInjectionAnalyzerEntry("select sysdate from dual", 1);
-        SQLInjectionAnalyzerEntry entry3 = new SQLInjectionAnalyzerEntry("select systimestamp from dual", 1);
-        SQLInjectionAnalyzerEntry entry4 = new SQLInjectionAnalyzerEntry(null, 1);
-        assertFalse(entry1.equals(null));
-        assertFalse(entry1.equals(new Object()));
-        assertFalse(entry4.equals(entry1));
-        assertFalse(entry1.equals(entry4));
-        assertFalse(entry1.equals(entry3));
-        assertTrue(entry1.equals(entry2));
-        assertTrue(entry4.equals(entry4));
+    public void twoSimilarEntriesEqual() {
+        assertThat(anEntryWithZeroVariation.equals(anotherEntryWithZeroVariation), is(true));
+    }
+
+    /**
+     * Test of equals method, of class SQLInjectionAnalyzerEntry.
+     */
+    @Test
+    public void entriesWithDifferentEntryPointsDiffer() {
+        SQLInjectionAnalyzerEntry different = new SQLInjectionAnalyzerEntry(ANOTHER_ENTRY_POINT, A_SIMPLE_SQL, ZERO_VARIATION);
+
+        assertThat(anEntryWithZeroVariation.equals(different), is(false));
+    }
+
+    /**
+     * Test of equals method, of class SQLInjectionAnalyzerEntry.
+     */
+    @Test
+    public void entriesWithDifferentStatementsDiffer() {
+        SQLInjectionAnalyzerEntry different = new SQLInjectionAnalyzerEntry(ANOTHER_ENTRY_POINT, ANOTHER_SIMPLE_SQL, ZERO_VARIATION);
+
+        assertThat(anEntryWithZeroVariation.equals(different), is(false));
+    }
+
+    /**
+     * Test of equals method, of class SQLInjectionAnalyzerEntry.
+     */
+    @Test
+    public void entriesWithDifferentVariationsAndCountEquals() {
+        assertThat(anEntryWithZeroVariation.equals(anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree), is(true));
+    }
+
+    /**
+     * Test of equals method, of class SQLInjectionAnalyzerEntry.
+     */
+    @Test
+    public void anEntryAlwaysEqualsItself() throws Exception {
+        assertThat(anEntryWithZeroVariation.equals(anEntryWithZeroVariation), is(true));
+    }
+
+    /**
+     * Test of equals method, of class SQLInjectionAnalyzerEntry.
+     */
+    @Test
+    public void anEntryNeverEqualsToNull() throws Exception {
+        assertThat(anEntryWithZeroVariation.equals(null), is(false));
+    }
+
+    /**
+     * Test of equals method, of class SQLInjectionAnalyzerEntry.
+     */
+    @Test
+    public void anEntryNeverEqualsAnotherClass() throws Exception {
+        assertThat(anEntryWithZeroVariation.equals("A String"), is(false));
     }
 
     /**
      * Test of hashCode method, of class SQLInjectionAnalyzerEntry.
      */
     @Test
-    public void testHashCode() {
-        SQLInjectionAnalyzerEntry entry1 = new SQLInjectionAnalyzerEntry("select sysdate from dual", 1);
-        assertEquals("select sysdate from dual".hashCode(), entry1.hashCode());
-        SQLInjectionAnalyzerEntry entry2 = new SQLInjectionAnalyzerEntry(null, 1);
-        assertEquals(0, entry2.hashCode());
+    public void entriesWithSameEntryPointAndStatementsHaveSameHashCode() {
+        assertThat(anEntryWithZeroVariation.hashCode(), equalTo(anEntryWithVariationsOfZeroOneAndThreeAndCountOfThree.hashCode()));
+    }
+
+    /**
+     * Test of hashCode method, of class SQLInjectionAnalyzerEntry.
+     */
+    @Test
+    public void aChangeOfVariationAndCountDoesNotChangeHashCode() {
+        int initial = anEntryWithZeroVariation.hashCode();
+
+        anEntryWithZeroVariation.addStatementCall(THREE_VARIATIONS);
+
+        assertThat(anEntryWithZeroVariation.hashCode(), equalTo(initial));
     }
 }
