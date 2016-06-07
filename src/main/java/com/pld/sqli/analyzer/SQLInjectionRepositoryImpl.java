@@ -47,23 +47,39 @@ public class SQLInjectionRepositoryImpl implements ISQLInjectionRepository {
         flushIfNecessary(false);
     }
 
-    private void flushIfNecessary(boolean force) throws IOException {
-        boolean needsToFlush = false;
+    protected void flushIfNecessary(boolean force) throws IOException {
+        boolean needsToFlush;
 
         //Only the first thread that enters this block needs to be the one flushing, but we don't want this to block the other threads.
         synchronized(entries) {
-            needsToFlush = cfg.isAnalyzerUseDiskStorage()
-                                && (!isFlushing)
-                                && (entries.rowKeySet().size() >= cfg.getAnalyzerMaxSizeInMemory()
-                                    || force);
+            needsToFlush = needsToFlush(force);
             if (needsToFlush) {
-                isFlushing = true;
+                setFlushing(true);
             }
         }
 
         if (needsToFlush) {
             storeEntriesToDisk();
         }
+    }
+
+    protected boolean needsToFlush(boolean force) {
+        return cfg.isAnalyzerUseDiskStorage()
+                && (!isFlushing())
+                && (getCurrentBufferSize() >= cfg.getAnalyzerMaxSizeInMemory()
+                    || force);
+    }
+
+    protected int getCurrentBufferSize() {
+        return entries.rowKeySet().size();
+    }
+
+    protected boolean isFlushing() {
+        return isFlushing;
+    }
+
+    protected void setFlushing(boolean flushing) {
+        this.isFlushing = flushing;
     }
 
     @Override
@@ -76,38 +92,45 @@ public class SQLInjectionRepositoryImpl implements ISQLInjectionRepository {
      * If there already is a disk file, merge the results.
      */
     void storeEntriesToDisk() throws IOException {
-        File location = new File(cfg.getAnalyzerStoragePath(), "SQLIAnalyzerDiskStorage.xml");
+        File location = getStorageFile();
 
-//        Map<String, Map<String, SQLInjectionAnalyzerEntry>> result;
         if (location.exists()) {
-            FileInputStream is = new FileInputStream(location);
-            Table<String, SQLInjectionAnalyzerEntry, SQLInjectionAnalyzerEntry> onDisk =
-                    (Table<String, SQLInjectionAnalyzerEntry, SQLInjectionAnalyzerEntry>) getXStream().fromXML(is);
-            is.close();
-
-            onDisk.values().parallelStream()
-                    .forEach((e) -> {
-                        synchronized (entries) {
-                            SQLInjectionAnalyzerEntry oldEntry = entries.get(e.getEntryPoint(), e);
-                            if (oldEntry != null) {
-                                oldEntry.mergeStatementCall(e);
-                            } else {
-                                entries.put(e.getEntryPoint(), e, e);
-                            }
-                        }
-                    });
+            loadFromDisk(location);
         } else {
             location.getParentFile().mkdirs();
         }
 
         // Store merge result.
-        FileOutputStream os = new FileOutputStream(location, false);
-        synchronized (entries) {
-            getXStream().toXML(entries, os);
-            os.close();
-            entries.clear();
-            isFlushing = false;
+        try (FileOutputStream os = new FileOutputStream(location, false)) {
+            synchronized (entries) {
+                getXStream().toXML(entries, os);
+                entries.clear();
+                setFlushing(false);
+            }
         }
+    }
+
+    protected void loadFromDisk(File location) throws IOException {
+        Table<String, SQLInjectionAnalyzerEntry, SQLInjectionAnalyzerEntry> onDisk;
+        try (FileInputStream is = new FileInputStream(location)) {
+            onDisk = (Table<String, SQLInjectionAnalyzerEntry, SQLInjectionAnalyzerEntry>) getXStream().fromXML(is);
+        }
+
+        onDisk.values().parallelStream()
+                .forEach((e) -> {
+                    synchronized (entries) {
+                        SQLInjectionAnalyzerEntry oldEntry = entries.get(e.getEntryPoint(), e);
+                        if (oldEntry != null) {
+                            oldEntry.mergeStatementCall(e);
+                        } else {
+                            entries.put(e.getEntryPoint(), e, e);
+                        }
+                    }
+                });
+    }
+
+    protected File getStorageFile() {
+        return new File(cfg.getAnalyzerStoragePath(), "SQLIAnalyzerDiskStorage.xml");
     }
 
     /**
