@@ -1,7 +1,3 @@
 machine:
   java:
     version: oraclejdk8
-
-integration-test:
-  post:
-    - mvn jacoco:report coveralls:report -DrepoToken=$REPO_TOKEN
