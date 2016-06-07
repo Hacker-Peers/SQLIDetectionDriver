@@ -4,7 +4,7 @@ package com.pld.sqli.config;
  * Test methods in SQLIAnalyzerConfig class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class SQLIAnalyzerConfigTest {
+public class SQLIAnalyzerConfigJMockitTest {
 //
 //    @AfterMethod
 //    public void tearDown() {

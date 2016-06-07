@@ -6,33 +6,15 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.Clob;
+import java.sql.*;
 import java.sql.Date;
-import java.sql.NClob;
-import java.sql.ParameterMetaData;
-import java.sql.PreparedStatement;
-import java.sql.Ref;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLType;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Wrapper around the real prepared statement.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class PreparedStatementWrapper<S extends PreparedStatement> extends StatementWrapper<S> implements PreparedStatement {
+class PreparedStatementWrapper<S extends PreparedStatement> extends StatementWrapper<S> implements PreparedStatement {
 
     // Attributes
     private Map<Object, Object> params = new TreeMap<>();
@@ -406,5 +388,14 @@ public class PreparedStatementWrapper<S extends PreparedStatement> extends State
     
     void addParams(Object k, Object v) {
         params.put(k, v);
+    }
+
+    @Override
+    public long executeLargeUpdate() throws SQLException {
+        long start = System.currentTimeMillis();
+        long result = getRealStatement().executeLargeUpdate();
+        long end = System.currentTimeMillis();
+        getAnalyzer().analyze(sql, params, start, end);
+        return result;
     }
 }

@@ -5,7 +5,7 @@ package com.pld.sqli.driver;
  *
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class AnalyzerDriverTest {
+public class AnalyzerDriverJMockitTest {
 
 //    /**
 //     * Test of initialize method, of class AnalyzerDriver.
