@@ -4,4 +4,4 @@ machine:
 
 test:
   post:
-    - mvn jacoco:report coveralls:report
+    - mvn jacoco:report coveralls:report -DrepoToken=$REPO_TOKEN
