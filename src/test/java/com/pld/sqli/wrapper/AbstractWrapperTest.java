@@ -1,21 +1,56 @@
 package com.pld.sqli.wrapper;
 
+import com.pld.sqli.analyzer.ISQLInjectionAnalyzer;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Test;
+
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
+import java.sql.Wrapper;
+import java.util.*;
 
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.fail;
 
 /**
- * Created by pldupont@gmail.com on 06/06/2016.
+ * @author pldupont@gmail.com
+ * 06/06/2016.
  */
-public class AbstractWrapperTest {
-    protected Object[] getMethodParams(Method method) throws IllegalAccessException, InstantiationException, MalformedURLException, SQLException {
+public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
+
+    @DataProvider(name = "methods")
+    public Iterator<Object[]> methods() throws ClassNotFoundException {
+        List<Object[]> result = new ArrayList<>();
+        addMethodsFromInterface(getBasicClass(), result);
+        addMethodsFromInterface(Wrapper.class, result);
+        return result.iterator();
+    }
+
+    @Test(dataProvider = "methods")
+    public void testWrappedMethodIsCalled(Object wrappedMethod) throws InvocationTargetException, IllegalAccessException, InstantiationException, MalformedURLException, SQLException, ClassNotFoundException {
+        B mockBasicClass = mock(getBasicClass());
+        W wrapper = getWrapperInstance(mock(ISQLInjectionAnalyzer.class), mockBasicClass);
+        Object[] params = getMethodParams((Method) wrappedMethod);
+
+        ((Method) wrappedMethod).invoke(wrapper, params);
+
+        ((Method) wrappedMethod).invoke(verify(mockBasicClass, times(1)), params);
+    }
+
+    protected abstract W getWrapperInstance(ISQLInjectionAnalyzer analyzer, B mockBasicClass);
+
+    private Class<B> getBasicClass() throws ClassNotFoundException {
+        Type mySuperclass = this.getClass().getGenericSuperclass();
+        Type basicType = ((ParameterizedType) mySuperclass).getActualTypeArguments()[0];
+        return (Class<B>) Class.forName(basicType.getTypeName());
+    }
+
+    private Object[] getMethodParams(Method method) throws IllegalAccessException, InstantiationException, MalformedURLException, SQLException {
         List<Object> params = new ArrayList<>();
         for (Class<?> clazz : method.getParameterTypes()) {
             if (clazz.isPrimitive()) {
@@ -55,5 +90,11 @@ public class AbstractWrapperTest {
             }
         }
         return params.toArray();
+    }
+
+    private void addMethodsFromInterface(Class<?> clazz, List<Object[]> result) {
+        Arrays.asList(clazz.getDeclaredMethods())
+                .stream()
+                .forEach(m -> result.add(new Object[]{m}));
     }
 }

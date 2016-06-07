@@ -6,18 +6,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
-import java.sql.Array;
-import java.sql.Blob;
-import java.sql.CallableStatement;
-import java.sql.Clob;
-import java.sql.Date;
-import java.sql.NClob;
-import java.sql.Ref;
-import java.sql.RowId;
-import java.sql.SQLException;
-import java.sql.SQLXML;
-import java.sql.Time;
-import java.sql.Timestamp;
+import java.sql.*;
 import java.util.Calendar;
 import java.util.Map;
 
@@ -25,7 +14,7 @@ import java.util.Map;
  * Wrapper around the real callable statement.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class CallableStatementWrapper<S extends CallableStatement> extends PreparedStatementWrapper<S> implements CallableStatement {
+class CallableStatementWrapper<S extends CallableStatement> extends PreparedStatementWrapper<S> implements CallableStatement {
 
     /**
      * Wrapper constructor on the real prepared statement.
@@ -372,6 +361,7 @@ public class CallableStatementWrapper<S extends CallableStatement> extends Prepa
     }
 
     @Override
+    @Deprecated
     public BigDecimal getBigDecimal(int i, int i1) throws SQLException {
         return getRealStatement().getBigDecimal(i, i1);
     }
@@ -644,5 +634,47 @@ public class CallableStatementWrapper<S extends CallableStatement> extends Prepa
     @Override
     public Reader getCharacterStream(String string) throws SQLException {
         return getRealStatement().getCharacterStream(string);
+    }
+
+    @Override
+    public void setObject(String parameterName, Object x, SQLType targetSqlType, int scaleOrLength) throws SQLException {
+        addParams(parameterName, x);
+        getRealStatement().setObject(parameterName, x, targetSqlType, scaleOrLength);
+    }
+
+    @Override
+    public void setObject(String parameterName, Object x, SQLType targetSqlType) throws SQLException {
+        addParams(parameterName, x);
+        getRealStatement().setObject(parameterName, x, targetSqlType);
+    }
+
+    @Override
+    public void registerOutParameter(int parameterIndex, SQLType sqlType) throws SQLException {
+        getRealStatement().registerOutParameter(parameterIndex, sqlType);
+    }
+
+    @Override
+    public void registerOutParameter(int parameterIndex, SQLType sqlType, int scale) throws SQLException {
+        getRealStatement().registerOutParameter(parameterIndex, sqlType, scale);
+    }
+
+    @Override
+    public void registerOutParameter(int parameterIndex, SQLType sqlType, String typeName) throws SQLException {
+        getRealStatement().registerOutParameter(parameterIndex, sqlType, typeName);
+    }
+
+    @Override
+    public void registerOutParameter(String parameterName, SQLType sqlType) throws SQLException {
+        getRealStatement().registerOutParameter(parameterName, sqlType);
+    }
+
+    @Override
+    public void registerOutParameter(String parameterName, SQLType sqlType, int scale) throws SQLException {
+        getRealStatement().registerOutParameter(parameterName, sqlType, scale);
+    }
+
+    @Override
+    public void registerOutParameter(String parameterName, SQLType sqlType, String typeName) throws SQLException {
+        getRealStatement().registerOutParameter(parameterName, sqlType, typeName);
     }
 }
