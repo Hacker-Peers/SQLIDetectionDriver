@@ -21,6 +21,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.jacoco.version>0.7.6.201602180812</maven.jacoco.version>
+        <spock_version>1.0-groovy-2.4</spock_version>
     </properties>
 
     <dependencies>
@@ -51,6 +52,12 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <version>1.10.19</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <version>${spock_version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
