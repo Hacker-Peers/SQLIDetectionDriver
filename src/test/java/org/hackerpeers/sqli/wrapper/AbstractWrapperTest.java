@@ -10,18 +10,30 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.sql.Blob;
+import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.Wrapper;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 
 /**
  * @author pldupont@gmail.com
  * 06/06/2016.
  */
 public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
+    private static final Set<String> SETTER_EXCEPTIONS = new HashSet<>(Arrays.asList(
+            "setCharacterStream",
+            "setAsciiStream",
+            "setBinaryStream",
+            "setBlob",
+            "setClob",
+            "setNCharacterStream",
+            "setNClob",
+            "setUnicodeStream"
+    ));
 
     @DataProvider(name = "methods")
     public Iterator<Object[]> methods() throws ClassNotFoundException {
@@ -34,12 +46,46 @@ public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
     @Test(dataProvider = "methods")
     public void testWrappedMethodIsCalled(Object wrappedMethod) throws InvocationTargetException, IllegalAccessException, InstantiationException, MalformedURLException, SQLException, ClassNotFoundException {
         B mockBasicClass = mock(getBasicClass());
-        W wrapper = getWrapperInstance(mock(ISQLInjectionAnalyzer.class), mockBasicClass);
+        ISQLInjectionAnalyzer mockAnalyzer = mock(ISQLInjectionAnalyzer.class);
+        W wrapper = getWrapperInstance(mockAnalyzer, mockBasicClass);
         Object[] params = getMethodParams((Method) wrappedMethod);
 
         ((Method) wrappedMethod).invoke(wrapper, params);
 
         ((Method) wrappedMethod).invoke(verify(mockBasicClass, times(1)), params);
+        assertSetterCatchParameters(wrapper, ((Method) wrappedMethod).getName(), params);
+    }
+
+    private void assertSetterCatchParameters(W wrapper, String methodName, Object[] params) {
+        if (methodName.startsWith("set")
+                && wrapper instanceof PreparedStatementWrapper) {
+            assertFalse(((PreparedStatementWrapper) wrapper).getParameters().isEmpty());
+
+            if (methodName.equals("setNull")) {
+                assertNull(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]));
+            } else if (SETTER_EXCEPTIONS.contains(methodName)
+                    && !(params[1] instanceof Blob || params[1] instanceof Clob)) {
+                StringBuilder expResult = new StringBuilder(methodName.replaceFirst("set", ""));
+                for (int i = 1; i < params.length; i++) {
+                    expResult.append("-");
+                    if (i == 1) {
+                        String paramClassName = params[i].getClass().getSimpleName();
+                        int mockSuffix = paramClassName.indexOf("$$EnhancerByMockito");
+                        if (mockSuffix > 0) {
+                            expResult.append(paramClassName.substring(0, mockSuffix));
+                        } else {
+                            expResult.append(paramClassName);
+                        }
+                    } else {
+                        expResult.append(params[i]);
+                    }
+                }
+                assertEquals(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]), "[" + expResult.toString() + "]");
+            } else {
+                assertEquals(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]), params[1]);
+            }
+        }
+
     }
 
     protected abstract W getWrapperInstance(ISQLInjectionAnalyzer analyzer, B mockBasicClass);

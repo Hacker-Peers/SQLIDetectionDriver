@@ -138,6 +138,9 @@ class PreparedStatementWrapper<S extends PreparedStatement> extends StatementWra
         getRealStatement().setAsciiStream(index, in, i1);
     }
 
+    /**
+     * @deprecated Use {@code setCharacterStream}
+     */
     @Override
     @Deprecated
     public void setUnicodeStream(int index, InputStream in, int i1) throws SQLException {
@@ -385,7 +388,14 @@ class PreparedStatementWrapper<S extends PreparedStatement> extends StatementWra
     protected List<Map<Object, Object>> getBatchParameters() {
         return batchParams;
     }
-    
+
+    /**
+     * @return The map of current parameters passed to the prepared statement.
+     */
+    Map<Object, Object> getParameters() {
+        return params;
+    }
+
     void addParams(Object k, Object v) {
         params.put(k, v);
     }
