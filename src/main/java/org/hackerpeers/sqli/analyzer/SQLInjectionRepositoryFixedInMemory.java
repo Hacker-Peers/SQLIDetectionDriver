@@ -1,9 +1,8 @@
-package com.pld.sqli.analyzer;
+package org.hackerpeers.sqli.analyzer;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-
-import com.pld.sqli.config.ISQLIAnalyzerConfig;
+import org.hackerpeers.sqli.config.ISQLIAnalyzerConfig;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
@@ -14,10 +13,10 @@ import java.util.Queue;
 /**
  * @author Simon Berthiaume (sberthiaume@gmail.com) based on Pierre-Luc Dupont (pldupont@gmail.com) work
  */
-public class SQLInjectionRepositoryFixedInMemory implements ISQLInjectionRepository {
+class SQLInjectionRepositoryFixedInMemory implements ISQLInjectionRepository {
+    private final Table<String, String, SQLInjectionAnalyzerEntry> contentBuffer;
     private ISQLIAnalyzerConfig cfg;
     private Queue<SQLInjectionAnalyzerEntry> temporalBuffer;
-    private Table<String, String, SQLInjectionAnalyzerEntry> contentBuffer;
     private int capacity;
 
 
@@ -25,7 +24,7 @@ public class SQLInjectionRepositoryFixedInMemory implements ISQLInjectionReposit
      *
      * @param bufferSize The size of the internal buffer; when capacity is reached, older entries will be removed to allocate space.
      */
-    public SQLInjectionRepositoryFixedInMemory(ISQLIAnalyzerConfig cfg, int bufferSize) {
+    SQLInjectionRepositoryFixedInMemory(ISQLIAnalyzerConfig cfg, int bufferSize) {
         this.cfg = cfg;
         capacity = bufferSize;
         temporalBuffer = new ArrayDeque<>(capacity);
@@ -50,7 +49,7 @@ public class SQLInjectionRepositoryFixedInMemory implements ISQLInjectionReposit
         }
     }
 
-    void makeRoomForNewEntry() {
+    private void makeRoomForNewEntry() {
         if (temporalBuffer.size() == capacity) {
             SQLInjectionAnalyzerEntry oldEntry = temporalBuffer.poll();
             contentBuffer.remove(oldEntry.getEntryPoint(), oldEntry.getStatement());
@@ -78,7 +77,7 @@ public class SQLInjectionRepositoryFixedInMemory implements ISQLInjectionReposit
         }
     }
 
-    void failIfClosed() throws IOException {
+    private void failIfClosed() throws IOException {
         synchronized(contentBuffer) {
             if (capacity < 0) {
                 throw new IOException("Repository closed");

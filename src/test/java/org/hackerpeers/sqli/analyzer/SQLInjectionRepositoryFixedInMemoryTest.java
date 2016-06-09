@@ -1,4 +1,4 @@
-package com.pld.sqli.analyzer;
+package org.hackerpeers.sqli.analyzer;
 
 import org.testng.annotations.Test;
 

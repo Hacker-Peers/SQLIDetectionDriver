@@ -1,7 +1,6 @@
-package com.pld.sqli.analyzer;
+package org.hackerpeers.sqli.analyzer;
 
-import com.pld.sqli.config.ISQLIAnalyzerConfig;
-
+import org.hackerpeers.sqli.config.ISQLIAnalyzerConfig;
 import org.mockito.Mock;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -22,12 +21,10 @@ public abstract class ISQLInjectionRepositoryTest<R extends ISQLInjectionReposit
     static final String AN_ENTRY_POINT = "my.entry.point";
     static final String ANOTHER_ENTRY_POINT = "another.entry.point";
     static final String A_SIMPLE_SQL = "select sysdate from dual";
-    private static final String ANOTHER_SIMPLE_SQL = "select systimestamp from dual";
-    private static final Integer THREE_VARIATIONS = 3;
     static final Integer ONE_VARIATION = 1;
     static final Integer A_BUFFER_SIZE = 2;
-
-
+    private static final String ANOTHER_SIMPLE_SQL = "select systimestamp from dual";
+    private static final Integer THREE_VARIATIONS = 3;
     @Mock
     protected ISQLIAnalyzerConfig cfg;
 
