@@ -1,12 +1,13 @@
 package com.pld.sqli.analyzer;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Collection;
 
 /**
  * @author Simon Berthiaume (sberthiaume@gmail.com) based on Pierre-Luc Dupont (pldupont@gmail.com) work
  */
-public interface ISQLInjectionRepository {
+public interface ISQLInjectionRepository extends Closeable {
 
     /**
      * Add the statement to the cache of statements by entry point.
@@ -21,10 +22,4 @@ public interface ISQLInjectionRepository {
      * @throws Exception If an error occurs while retrieving entries.
      */
     Collection<SQLInjectionAnalyzerEntry> getEntries() throws IOException;
-
-    /**
-     * Flush entries to storage if appropriate.
-     * @throws IOException
-     */
-    void flush() throws IOException;
 }

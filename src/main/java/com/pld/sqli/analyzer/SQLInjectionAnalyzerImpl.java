@@ -55,7 +55,7 @@ public class SQLInjectionAnalyzerImpl implements ISQLInjectionAnalyzer {
     public void shutdown() {
         analyzerPool.shutdown();
         try {
-            repo.flush();
+            repo.close();
         } catch (IOException ex) {
             Logger.getLogger(SQLInjectionAnalyzerImpl.class.getName()).log(Level.SEVERE, "Unable to store result on disk", ex);
         }
@@ -65,7 +65,7 @@ public class SQLInjectionAnalyzerImpl implements ISQLInjectionAnalyzer {
     public void shutdownNow() {
         analyzerPool.shutdownNow();
         try {
-            repo.flush();
+            repo.close();
         } catch (IOException ex) {
             Logger.getLogger(SQLInjectionAnalyzerImpl.class.getName()).log(Level.SEVERE, "Unable to store result on disk", ex);
         }

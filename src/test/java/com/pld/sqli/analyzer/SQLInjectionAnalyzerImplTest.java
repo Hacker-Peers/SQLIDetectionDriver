@@ -77,7 +77,7 @@ public class SQLInjectionAnalyzerImplTest {
         analyzer.shutdown();
 
         verify(analyzerPool, times(1)).shutdown();
-        verify(repo, times(1)).flush();
+        verify(repo, times(1)).close();
     }
 
     @Test
@@ -85,24 +85,24 @@ public class SQLInjectionAnalyzerImplTest {
         analyzer.shutdownNow();
 
         verify(analyzerPool, times(1)).shutdownNow();
-        verify(repo, times(1)).flush();
+        verify(repo, times(1)).close();
     }
 
     @Test
     public void whenShutdownIsCalledFlushIOExceptionsAreTrapped() throws Exception {
-        doThrow(new IOException("Should not be raised!")).when(repo).flush();
+        doThrow(new IOException("Should not be raised!")).when(repo).close();
         analyzer.shutdown();
 
         verify(analyzerPool, times(1)).shutdown();
-        verify(repo, times(1)).flush();
+        verify(repo, times(1)).close();
     }
 
     @Test
     public void whenShutdownNowIsCalledFlushIOExceptionsAreTrapped() throws Exception {
-        doThrow(new IOException("Should not be raised!")).when(repo).flush();
+        doThrow(new IOException("Should not be raised!")).when(repo).close();
         analyzer.shutdownNow();
 
         verify(analyzerPool, times(1)).shutdownNow();
-        verify(repo, times(1)).flush();
+        verify(repo, times(1)).close();
     }
 }
