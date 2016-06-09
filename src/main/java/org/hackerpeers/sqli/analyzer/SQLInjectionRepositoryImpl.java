@@ -81,7 +81,7 @@ public class SQLInjectionRepositoryImpl implements ISQLInjectionRepository {
     }
 
     @Override
-    public void flush() throws IOException {
+    public void close() throws IOException {
         flushIfNecessary(true);
     }
 
