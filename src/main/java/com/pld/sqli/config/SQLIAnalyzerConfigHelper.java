@@ -5,13 +5,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 /**
  * @author Simon Berthiaume (sberthiaume@gmail.com) based on Pierre-Luc Dupont (pldupont@gmail.com) work
@@ -84,6 +78,8 @@ public class SQLIAnalyzerConfigHelper {
         cfg.setAnalyzerLogThresholdWarning(NumberUtils.toLong(props.getProperty("analyzer.log.threshold.warning"), -1L));
         cfg.setAnalyzerLogThresholdInfo(NumberUtils.toLong(props.getProperty("analyzer.log.threshold.info"), -1L));
         cfg.setAnalyzerLogThresholdFine(NumberUtils.toLong(props.getProperty("analyzer.log.threshold.fine"), -1L));
+
+        cfg.setLoaded(true);
 
         return cfg;
     }
