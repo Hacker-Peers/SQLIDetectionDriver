@@ -1,7 +1,6 @@
 package org.hackerpeers.sqli.spec
 
 import org.hackerpeers.sqli.driver.AnalyzerDriver
-import org.junit.Ignore
 import spock.lang.Specification
 
 import java.sql.Connection
@@ -12,7 +11,6 @@ import java.sql.PreparedStatement
  * @author pldupont@gmail.com
  * 09/06/2016.
  */
-@Ignore
 class PreparedStatementSpec extends Specification {
     def Connection conn;
 
@@ -20,21 +18,27 @@ class PreparedStatementSpec extends Specification {
         Properties properties = new Properties();
         properties.put("user", "sqli");
         properties.put("password", "sqli");
-        String url = "jdbc:sqli://localhost/sqliDriver";
+        String url = "jdbc:sqli:mem:sqliDriver;MV_STORE=FALSE;MVCC=FALSE"
 
         Class.forName("org.hackerpeers.sqli.driver.AnalyzerDriver");
         this.conn = DriverManager.getConnection(url, properties);
+        conn.createStatement().execute("CREATE TABLE TEST(ID INT PRIMARY KEY, NAME VARCHAR(255))")
     }
 
     def "validate that all parameters are trapped and reported"() {
         when:
-        PreparedStatement ps = conn.prepareStatement("SELECT 1 FROM dual WHERE :A = :A AND :B = :B")
-        ps.setString("A", "1");
-        ps.setInt("B", 2);
+        AnalyzerDriver.allEntries.clear()
+        PreparedStatement ps = conn.prepareStatement("SELECT 1 FROM TEST WHERE NAME = ? AND ID = ?")
+        ps.setString(1, "1");
+        ps.setInt(2, 2);
         ps.execute();
 
+        String key = AnalyzerDriver.allEntries.keySet()[1]
+
         then:
-        AnalyzerDriver.allEntries.isEmpty()
+        key != null
+        !AnalyzerDriver.allEntries.isEmpty()
+        AnalyzerDriver.allEntries.containsKey(key)
 
     }
 //
