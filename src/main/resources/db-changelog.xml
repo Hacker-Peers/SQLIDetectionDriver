@@ -1,0 +1,41 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="@sberthiaume" id="1" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
+        <createTable tableName="EntryPoints" schemaName="PUBLIC">
+            <column name="id" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+		<addPrimaryKey constraintName="EntryPoints_PK" columnNames="id" tableName="EntryPoints"/>
+    </changeSet>
+	<changeSet author="@sberthiaume" id="2" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
+        <createTable tableName="Statements" schemaName="PUBLIC">
+            <column name="id" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entryPointId" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+		<addPrimaryKey constraintName="Statements_PK" columnNames="id" tableName="Statements"/>
+		<addForeignKeyConstraint constraintName="EntryPoints_FK" baseColumnNames="entryPointId" baseTableName="Statements" referencedColumnNames="id" referencedTableName="EntryPoints"/>
+    </changeSet>
+    <changeSet author="@sberthiaume" id="3" objectQuotingStrategy="QUOTE_ALL_OBJECTS">
+        <createTable tableName="InClauseVariations" schemaName="PUBLIC">
+            <column name="statementId" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+		<addUniqueConstraint constraintName="Statements_UK" columnNames="statementId, value" tableName="InClauseVariations" />
+		<addForeignKeyConstraint constraintName="Statements_FK" baseColumnNames="statementId" baseTableName="InClauseVariations" referencedColumnNames="id" referencedTableName="Statements"/>
+    </changeSet>
+</databaseChangeLog>
