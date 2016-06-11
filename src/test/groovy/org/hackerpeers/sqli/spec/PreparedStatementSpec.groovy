@@ -1,6 +1,7 @@
 package org.hackerpeers.sqli.spec
 
 import org.hackerpeers.sqli.driver.AnalyzerDriver
+import spock.lang.Shared
 import spock.lang.Specification
 
 import java.sql.Connection
@@ -12,9 +13,10 @@ import java.sql.PreparedStatement
  * 09/06/2016.
  */
 class PreparedStatementSpec extends Specification {
+    @Shared
     def Connection conn;
 
-    def setup() {
+    def setupSpec() {
         Properties properties = new Properties();
         properties.put("user", "sqli");
         properties.put("password", "sqli");
@@ -25,6 +27,8 @@ class PreparedStatementSpec extends Specification {
         conn.createStatement().execute("CREATE TABLE TEST(ID INT PRIMARY KEY, NAME VARCHAR(255))")
     }
 
+    // WARNING, the order of the test methods is important. Do not change the order.
+
     def "validate that all parameters are trapped and reported"() {
         when:
         AnalyzerDriver.allEntries.clear()
@@ -32,8 +36,11 @@ class PreparedStatementSpec extends Specification {
         ps.setString(1, "1");
         ps.setInt(2, 2);
         ps.execute();
+        Thread.sleep(1000L) // Since the work is threaded, we need to wait a little bit.
 
-        String key = AnalyzerDriver.allEntries.keySet()[1]
+        println AnalyzerDriver.allEntries.keySet()
+        String key = AnalyzerDriver.allEntries.keySet().find { k -> k.contains("#\$spock_feature_0_0()") } // Current test
+        println key
 
         then:
         key != null
