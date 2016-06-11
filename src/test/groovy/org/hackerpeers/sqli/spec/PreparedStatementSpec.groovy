@@ -1,5 +1,6 @@
 package org.hackerpeers.sqli.spec
 
+import org.hackerpeers.sqli.analyzer.SQLInjectionAnalyzerEntry
 import org.hackerpeers.sqli.driver.AnalyzerDriver
 import spock.lang.Shared
 import spock.lang.Specification
@@ -29,7 +30,7 @@ class PreparedStatementSpec extends Specification {
 
     // WARNING, the order of the test methods is important. Do not change the order.
 
-    def "validate that all parameters are trapped and reported"() {
+    def "validate that the query is trap and there is no variation"() {
         when:
         AnalyzerDriver.allEntries.clear()
         PreparedStatement ps = conn.prepareStatement("SELECT 1 FROM TEST WHERE NAME = ? AND ID = ?")
@@ -38,14 +39,46 @@ class PreparedStatementSpec extends Specification {
         ps.execute();
         Thread.sleep(1000L) // Since the work is threaded, we need to wait a little bit.
 
-        println AnalyzerDriver.allEntries.keySet()
-        String key = AnalyzerDriver.allEntries.keySet().find { k -> k.contains("#\$spock_feature_0_0()") } // Current test
-        println key
+        String entryPoint = AnalyzerDriver.allEntries.keySet().find { k -> k.contains("spock_feature_0_0") } // Current test
+        def queryMap = AnalyzerDriver.allEntries.get(entryPoint)
+        SQLInjectionAnalyzerEntry entry = queryMap.get("SELECT 1 FROM TEST WHERE NAME = ? AND ID = ?")
 
         then:
-        key != null
         !AnalyzerDriver.allEntries.isEmpty()
-        AnalyzerDriver.allEntries.containsKey(key)
+        entryPoint != null
+        queryMap != null
+        queryMap.containsKey("SELECT 1 FROM TEST WHERE NAME = ? AND ID = ?")
+        entry != null
+        entry.getCount() == 1
+        entry.getVariationList() == "0"
+
+    }
+
+    def "validate that the query is trap and there is 3 IN Clause variation"() {
+        when:
+        AnalyzerDriver.allEntries.clear()
+        (1..3).each { inVariation ->
+            PreparedStatement ps = conn.prepareStatement("SELECT 1 FROM TEST WHERE NAME = ? AND ID IN (?${", ?" * inVariation})")
+            ps.setString(1, "1");
+            for (int i = 0; i <= inVariation; i++) {
+                ps.setInt(2 + i, inVariation);
+            }
+            ps.execute();
+        }
+        Thread.sleep(1000L) // Since the work is threaded, we need to wait a little bit.
+
+        String entryPoint = AnalyzerDriver.allEntries.keySet().find { k -> k.contains("spock_feature_0_1") } // Current test
+        def queryMap = AnalyzerDriver.allEntries.get(entryPoint)
+        SQLInjectionAnalyzerEntry entry = queryMap.get("SELECT 1 FROM TEST WHERE NAME = ? AND ID IN (?)")
+
+        then:
+        !AnalyzerDriver.allEntries.isEmpty()
+        entryPoint != null
+        queryMap != null
+        queryMap.containsKey("SELECT 1 FROM TEST WHERE NAME = ? AND ID IN (?)")
+        entry != null
+        entry.getCount() == 3
+        entry.getVariationList() == "2,3,4"
 
     }
 //
