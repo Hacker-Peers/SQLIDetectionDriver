@@ -47,6 +47,7 @@ class PreparedStatementSpec extends Specification {
         !AnalyzerDriver.allEntries.isEmpty()
         entryPoint != null
         queryMap != null
+        queryMap.size() == 1
         queryMap.containsKey("SELECT 1 FROM TEST WHERE NAME = ? AND ID = ?")
         entry != null
         entry.getCount() == 1
@@ -75,10 +76,35 @@ class PreparedStatementSpec extends Specification {
         !AnalyzerDriver.allEntries.isEmpty()
         entryPoint != null
         queryMap != null
+        queryMap.size() == 1
         queryMap.containsKey("SELECT 1 FROM TEST WHERE NAME = ? AND ID IN (?)")
         entry != null
         entry.getCount() == 3
         entry.getVariationList() == "2,3,4"
+
+    }
+
+    def "validate that the query is trap and there is 3 different queries from the same entry point"() {
+        when:
+        def queries = ["SELECT 1 FROM TEST WHERE NAME = 'ABC'", "SELECT 1 FROM TEST WHERE ID = 123", "SELECT 1 FROM TEST"]
+        AnalyzerDriver.allEntries.clear()
+        queries.each { q ->
+            PreparedStatement ps = conn.prepareStatement(q)
+            ps.execute();
+        }
+        Thread.sleep(1000L) // Since the work is threaded, we need to wait a little bit.
+
+        String entryPoint = AnalyzerDriver.allEntries.keySet().find { k -> k.contains("spock_feature_0_2") } // Current test
+        def queryMap = AnalyzerDriver.allEntries.get(entryPoint)
+
+        then:
+        !AnalyzerDriver.allEntries.isEmpty()
+        entryPoint != null
+        queryMap != null
+        queryMap.size() == 3
+        queryMap.containsKey("SELECT 1 FROM TEST WHERE NAME = 'ABC'")
+        queryMap.containsKey("SELECT 1 FROM TEST WHERE ID = 123")
+        queryMap.containsKey("SELECT 1 FROM TEST")
 
     }
 //
