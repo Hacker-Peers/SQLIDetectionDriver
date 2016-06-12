@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Queue;
 
 /**
+ * In-memory implementation of the repository; unless data is saved externally, all data is lost when the JVM shuts down.
  * @author Simon Berthiaume (sberthiaume@gmail.com) based on Pierre-Luc Dupont (pldupont@gmail.com) work
  */
 class SQLInjectionRepositoryFixedInMemory implements ISQLInjectionRepository {

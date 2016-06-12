@@ -28,52 +28,83 @@ import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 
 /**
+ * An H2 DB implementation of the repository; if created in-memory, all data is lost when the JVM shuts down.
+ * If persisted to a file then the data is preserved from execution to execution.
  * @author Simon Berthiaume (sberthiaume@gmail.com) based on Pierre-Luc Dupont (pldupont@gmail.com) work
  */
 public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     private static final String CHANGELOG_FILENAME = "db-changelog.xml";
     private static final String GET_ALL_DATA_SQL =  "SELECT e.value AS entryPoint, s.value AS statement, i.value AS variation\n" +
-                                                    "FROM EntryPoints e\n" +
-                                                    "   INNER JOIN Statements s ON s.entryPointId = e.id\n" +
-                                                    "   INNER JOIN InClauseVariations i ON i.statementId = s.id";
-    private static final String INSERT_ENTRY_POINT_SQL = "INSERT INTO EntryPoints(value) VALUES(?)";
+                                                    "FROM EntryPointsStatements es\n" +
+                                                    "   INNER JOIN EntryPoints e ON es.entryPointId = e.id\n" +
+                                                    "   INNER JOIN Statements s ON es.statementId = s.id\n" +
+                                                    "   INNER JOIN InClauseVariations i ON i.entryPointStatementId = es.id";
+
     private static final String FIND_ENTRY_POINT_SQL = "SELECT id FROM EntryPoints WHERE value = ?";
-    private static final String INSERT_STATEMENT_SQL = "INSERT INTO Statements(entryPointId, value) VALUES(?, ?)";
-    private static final String FIND_STATEMENT_SQL = "SELECT id FROM Statements WHERE entryPointId = ? AND value = ?";
-    private static final String INSERT_IN_CLAUSE_SQL = "INSERT INTO InClauseVariations(statementId, value) VALUES(?, ?)";
-    private static final String FIND_IN_CLAUSE_SQL = "SELECT value FROM InClauseVariations WHERE statementId = ? AND value = ?";
+    private static final String INSERT_ENTRY_POINT_SQL = "INSERT INTO EntryPoints(value) VALUES(?)";
+
+    private static final String FIND_STATEMENT_SQL = "SELECT id FROM Statements WHERE value = ?";
+    private static final String INSERT_STATEMENT_SQL = "INSERT INTO Statements(value) VALUES(?)";
+
+    private static final String FIND_ENTRY_POINT_STATEMENT_SQL = "SELECT id FROM EntryPointsStatements WHERE entryPointId = ? AND statementId = ?";
+    private static final String INSERT_ENTRY_POINT_STATEMENT_SQL = "INSERT INTO EntryPointsStatements(entryPointId, statementId) VALUES(?, ?)";
+
+    private static final String FIND_IN_CLAUSE_SQL = "SELECT value FROM InClauseVariations WHERE entryPointStatementId = ? AND value = ?";
+    private static final String INSERT_IN_CLAUSE_SQL = "INSERT INTO InClauseVariations(entryPointStatementId, value) VALUES(?, ?)";
+
     private Connection conn;
 
-    public SQLInjectionRepositoryH2(String dbFilename) throws SQLException, ClassNotFoundException {
+    /**
+     * Repo connected to the given H2 DB.
+     * @param dbFilename Path the the H2 database (excluding any .h2.db extension)
+     * @throws SQLException If there is any database-related issue.
+     * @throws ClassNotFoundException If unable to load the H2 JDBC drivers.
+     */
+    public SQLInjectionRepositoryH2(final String dbFilename) throws SQLException, ClassNotFoundException {
         Class.forName("org.h2.Driver");
         try {
             conn = DriverManager.getConnection("jdbc:h2:" + dbFilename + ";MV_STORE=FALSE;MVCC=FALSE");
             initSchema(conn);
-        } catch (LiquibaseException e) {
+        } catch (SQLException e) {
             DbUtils.closeQuietly(conn);
+            throw e;
+        }
+    }
+
+    /**
+     * Initialize and updates the database schema if needed.
+     * @param conn The connection to the DB
+     * @throws SQLException If Liquibase experiences any issues.
+     */
+    private void initSchema(final Connection conn) throws SQLException {
+        try {
+            //http://www.liquibase.org/2015/07/executing-liquibase.html
+            Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
+            Liquibase liquibase = new Liquibase(CHANGELOG_FILENAME, new ClassLoaderResourceAccessor(SQLInjectionRepositoryH2.class.getClassLoader()), database);
+            liquibase.update(new Contexts(), new LabelExpression());
+        } catch (LiquibaseException e) {
             throw new SQLException("Error updating the database", e);
         }
     }
 
-    void initSchema(Connection conn) throws LiquibaseException, SQLException {
-        //http://www.liquibase.org/2015/07/executing-liquibase.html
-        Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
-        Liquibase liquibase = new Liquibase(CHANGELOG_FILENAME, new ClassLoaderResourceAccessor(SQLInjectionRepositoryH2.class.getClassLoader()), database);
-        liquibase.update(new Contexts(), new LabelExpression());
-    }
-
     @Override
-    public synchronized void addStatement(String entryPoint, String statement, int inClauseVariant) throws IOException {
+    public synchronized void addStatement(final String entryPoint, final String statement, final int inClauseVariant) throws IOException {
         failIfClosed();
         try {
-            persistInClauseVariant(persistStatement(persistEntryPoint(entryPoint), statement), inClauseVariant);
+            persistInClauseVariant(persistEntryPointStatement(persistEntryPoint(entryPoint), persistStatement(statement)), inClauseVariant);
             conn.commit();
         } catch (SQLException ex) {
             throw new IOException("Error persisting data", ex);
         }
     }
 
-    int persistEntryPoint(final String entryPoint) throws SQLException {
+    /**
+     * Persists the given entry point; will create the record if it doesn't exist, but will always return the record's ID.
+     * @param entryPoint The entry point to persist
+     * @return The entry point record ID.
+     * @throws SQLException If there is any database issues.
+     */
+    private int persistEntryPoint(final String entryPoint) throws SQLException {
         QueryRunner qr = new QueryRunner();
 
         Integer entryPointId = qr.query(conn, FIND_ENTRY_POINT_SQL, new ScalarHandler<Integer>(1), entryPoint);
@@ -84,23 +115,53 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
         return entryPointId;
     }
 
-    int persistStatement(final int entryPointId, final String statement) throws SQLException {
+    /**
+     * Persists the given statement; will create the record if it doesn't exist, but will always return the record's ID.
+     * @param statement The entry point to persist
+     * @return The statement record ID.
+     * @throws SQLException If there is any database issues.
+     */
+    private int persistStatement(final String statement) throws SQLException {
         QueryRunner qr = new QueryRunner();
 
-        Integer statementId = qr.query(conn, FIND_STATEMENT_SQL, new ScalarHandler<Integer>(1), entryPointId, statement);
+        Integer statementId = qr.query(conn, FIND_STATEMENT_SQL, new ScalarHandler<Integer>(1), statement);
         if (statementId == null) {
-            statementId = qr.insert(conn, INSERT_STATEMENT_SQL, new ScalarHandler<Integer>(), entryPointId, statement);
+            statementId = qr.insert(conn, INSERT_STATEMENT_SQL, new ScalarHandler<Integer>(), statement);
         }
 
         return statementId;
     }
 
-    void persistInClauseVariant(final int statementId, final int inClauseVariant) throws SQLException {
+    /**
+     * Persists the given entry point + statement relationship; will create the record if it doesn't exist, but will always return the record's ID.
+     * @param entryPointId The entry point ID.
+     * @param statementId The statement ID.
+     * @return The entry point + statement relationship record ID.
+     * @throws SQLException If there is any database issues.
+     */
+    private int persistEntryPointStatement(final int entryPointId, final int statementId) throws SQLException {
         QueryRunner qr = new QueryRunner();
 
-        Integer variant = qr.query(conn, FIND_IN_CLAUSE_SQL, new ScalarHandler<Integer>(1), statementId, inClauseVariant);
+        Integer entryPintStatementId = qr.query(conn, FIND_ENTRY_POINT_STATEMENT_SQL, new ScalarHandler<Integer>(1), entryPointId, statementId);
+        if (entryPintStatementId == null) {
+            entryPintStatementId = qr.insert(conn, INSERT_ENTRY_POINT_STATEMENT_SQL, new ScalarHandler<Integer>(), entryPointId, statementId);
+        }
+
+        return entryPintStatementId;
+    }
+
+    /**
+     * Persists the given 'IN CLAUSE' variant; will create the record if it doesn't exist or do nothing if it does.
+     * @param entryPointStatementId The entry point + statement relationship record ID.
+     * @param inClauseVariant The 'IN CLAUSE' variant value.
+     * @throws SQLException If there is any database issues.
+     */
+    private void persistInClauseVariant(final int entryPointStatementId, final int inClauseVariant) throws SQLException {
+        QueryRunner qr = new QueryRunner();
+
+        Integer variant = qr.query(conn, FIND_IN_CLAUSE_SQL, new ScalarHandler<Integer>(1), entryPointStatementId, inClauseVariant);
         if (variant == null) {
-            qr.insert(conn, INSERT_IN_CLAUSE_SQL, new ScalarHandler<Integer>(), statementId, inClauseVariant);
+            qr.insert(conn, INSERT_IN_CLAUSE_SQL, new ScalarHandler<Integer>(), entryPointStatementId, inClauseVariant);
         }
     }
 
@@ -122,6 +183,11 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
         return Collections.unmodifiableCollection(buffer.values());
     }
 
+    /**
+     * Get raw, uncombined data from the DB
+     * @return List of raw, uncombined data from the DB.
+     * @throws IOException If there is any issues reading the data from the DB.
+     */
     private List<SQLInjectionAnalyzerEntry> getUncombinedEntriesFromDB() throws IOException {
         List<SQLInjectionAnalyzerEntry> uncombinedEntries = new ArrayList<>();
         try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(GET_ALL_DATA_SQL)) {
@@ -146,6 +212,10 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
         }
     }
 
+    /**
+     * Just checks if the repo was closed and throw an Exception if it was.
+     * @throws IOException If the repo was closed.
+     */
     private synchronized void failIfClosed() throws IOException {
         boolean isClosed = true;
         try {

@@ -8,8 +8,8 @@ import java.io.IOException;
  * @author Simon Berthiaume (sberthiaume@gmail.com)
  */
 public class SQLInjectionRepositoryH2Test extends ISQLInjectionRepositoryTest<SQLInjectionRepositoryH2> {
-    private static final String AN_H2_DB_FILENAME = "mem:"; //In-memory
-    //private static final String AN_H2_DB_FILENAME = "./src/test/resources/EmptyDB";
+    private static final String AN_H2_IN_MEMORY_DB_FILENAME = "mem:"; //In-memory
+    private static final String AN_H2_DB_FILENAME = "./src/test/resources/EmptyDB";
 
     @AfterMethod
     void resetDb() throws IOException {
@@ -18,6 +18,6 @@ public class SQLInjectionRepositoryH2Test extends ISQLInjectionRepositoryTest<SQ
 
     @Override
     SQLInjectionRepositoryH2 createRepo() throws Exception {
-        return new SQLInjectionRepositoryH2(AN_H2_DB_FILENAME);
+        return new SQLInjectionRepositoryH2(AN_H2_IN_MEMORY_DB_FILENAME);
     }
 }

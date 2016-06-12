@@ -10,13 +10,11 @@
             </column>
         </createTable>
 		<addPrimaryKey constraintName="EntryPoints_PK" columnNames="id" tableName="EntryPoints"/>
+        <addUniqueConstraint constraintName="EntryPoints_UK" columnNames="value" tableName="EntryPoints" />
     </changeSet>
 	<changeSet author="@sberthiaume" id="2" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
         <createTable tableName="Statements" schemaName="PUBLIC">
             <column name="id" type="INTEGER" autoIncrement="true">
-                <constraints nullable="false"/>
-            </column>
-            <column name="entryPointId" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
             <column name="value" type="VARCHAR(255)">
@@ -24,18 +22,35 @@
             </column>
         </createTable>
 		<addPrimaryKey constraintName="Statements_PK" columnNames="id" tableName="Statements"/>
-		<addForeignKeyConstraint constraintName="EntryPoints_FK" baseColumnNames="entryPointId" baseTableName="Statements" referencedColumnNames="id" referencedTableName="EntryPoints"/>
+        <addUniqueConstraint constraintName="Statements_UK" columnNames="value" tableName="Statements" />
     </changeSet>
     <changeSet author="@sberthiaume" id="3" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
-        <createTable tableName="InClauseVariations" schemaName="PUBLIC">
+        <createTable tableName="EntryPointsStatements" schemaName="PUBLIC">
+            <column name="id" type="INTEGER" autoIncrement="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="entryPointId" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
             <column name="statementId" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey constraintName="EntryPointsStatements_PK" columnNames="id" tableName="EntryPointsStatements"/>
+        <addUniqueConstraint constraintName="EntryPointsStatements_UK" columnNames="entryPointId, statementId" tableName="EntryPointsStatements" />
+        <addForeignKeyConstraint constraintName="EntryPoints_FK" baseColumnNames="entryPointId" baseTableName="EntryPointsStatements" referencedColumnNames="id" referencedTableName="EntryPoints"/>
+        <addForeignKeyConstraint constraintName="Statements_FK" baseColumnNames="statementId" baseTableName="EntryPointsStatements" referencedColumnNames="id" referencedTableName="Statements"/>
+    </changeSet>
+    <changeSet author="@sberthiaume" id="4" objectQuotingStrategy="QUOTE_ONLY_RESERVED_WORDS">
+        <createTable tableName="InClauseVariations" schemaName="PUBLIC">
+            <column name="entryPointStatementId" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
             <column name="value" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
         </createTable>
-		<addUniqueConstraint constraintName="Statements_UK" columnNames="statementId, value" tableName="InClauseVariations" />
-		<addForeignKeyConstraint constraintName="Statements_FK" baseColumnNames="statementId" baseTableName="InClauseVariations" referencedColumnNames="id" referencedTableName="Statements"/>
+		<addUniqueConstraint constraintName="EntryPointStatement_UK" columnNames="entryPointStatementId, value" tableName="InClauseVariations" />
+		<addForeignKeyConstraint constraintName="EntryPointsStatements_FK" baseColumnNames="entryPointStatementId" baseTableName="InClauseVariations" referencedColumnNames="id" referencedTableName="EntryPointsStatements"/>
     </changeSet>
 </databaseChangeLog>
