@@ -4,11 +4,12 @@ import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 
 import org.apache.commons.dbutils.DbUtils;
+import org.apache.commons.dbutils.QueryRunner;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -36,8 +37,11 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
                                                     "   INNER JOIN Statements s ON s.entryPointId = e.id\n" +
                                                     "   INNER JOIN InClauseVariations i ON i.statementId = s.id";
     private static final String INSERT_ENTRY_POINT_SQL = "INSERT INTO EntryPoints(value) VALUES(?)";
+    private static final String FIND_ENTRY_POINT_SQL = "SELECT id FROM EntryPoints WHERE value = ?";
     private static final String INSERT_STATEMENT_SQL = "INSERT INTO Statements(entryPointId, value) VALUES(?, ?)";
+    private static final String FIND_STATEMENT_SQL = "SELECT id FROM Statements WHERE entryPointId = ? AND value = ?";
     private static final String INSERT_IN_CLAUSE_SQL = "INSERT INTO InClauseVariations(statementId, value) VALUES(?, ?)";
+    private static final String FIND_IN_CLAUSE_SQL = "SELECT value FROM InClauseVariations WHERE statementId = ? AND value = ?";
     private Connection conn;
 
     public SQLInjectionRepositoryH2(String dbFilename) throws SQLException, ClassNotFoundException {
@@ -59,7 +63,7 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     }
 
     @Override
-    public void addStatement(String entryPoint, String statement, int inClauseVariant) throws IOException {
+    public synchronized void addStatement(String entryPoint, String statement, int inClauseVariant) throws IOException {
         failIfClosed();
         try {
             persistInClauseVariant(persistStatement(persistEntryPoint(entryPoint), statement), inClauseVariant);
@@ -69,46 +73,34 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
         }
     }
 
-    int persistEntryPoint(String entryPoint) throws SQLException {
-        int entryPointId;
-        try (PreparedStatement stmt = conn.prepareStatement(INSERT_ENTRY_POINT_SQL, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, entryPoint);
-            stmt.execute();
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    entryPointId = rs.getInt(1);
-                } else {
-                    throw new SQLException("No value inserted!");
-                }
-            }
+    int persistEntryPoint(final String entryPoint) throws SQLException {
+        QueryRunner qr = new QueryRunner();
 
+        Integer entryPointId = qr.query(conn, FIND_ENTRY_POINT_SQL, new ScalarHandler<Integer>(1), entryPoint);
+        if (entryPointId == null) {
+            entryPointId = qr.insert(conn, INSERT_ENTRY_POINT_SQL, new ScalarHandler<Integer>(), entryPoint);
         }
+
         return entryPointId;
     }
 
-    int persistStatement(int entryPointId, String statement) throws SQLException {
-        int statementId;
-        try (PreparedStatement stmt = conn.prepareStatement(INSERT_STATEMENT_SQL, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, entryPointId);
-            stmt.setString(2, statement);
-            stmt.execute();
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    statementId = rs.getInt(1);
-                } else {
-                    throw new SQLException("No value inserted!");
-                }
-            }
+    int persistStatement(final int entryPointId, final String statement) throws SQLException {
+        QueryRunner qr = new QueryRunner();
 
+        Integer statementId = qr.query(conn, FIND_STATEMENT_SQL, new ScalarHandler<Integer>(1), entryPointId, statement);
+        if (statementId == null) {
+            statementId = qr.insert(conn, INSERT_STATEMENT_SQL, new ScalarHandler<Integer>(), entryPointId, statement);
         }
+
         return statementId;
     }
 
-    void persistInClauseVariant(int statementId, int inClauseVariant) throws SQLException {
-        try (PreparedStatement stmt = conn.prepareStatement(INSERT_IN_CLAUSE_SQL)) {
-            stmt.setInt(1, statementId);
-            stmt.setInt(2, inClauseVariant);
-            stmt.execute();
+    void persistInClauseVariant(final int statementId, final int inClauseVariant) throws SQLException {
+        QueryRunner qr = new QueryRunner();
+
+        Integer variant = qr.query(conn, FIND_IN_CLAUSE_SQL, new ScalarHandler<Integer>(1), statementId, inClauseVariant);
+        if (variant == null) {
+            qr.insert(conn, INSERT_IN_CLAUSE_SQL, new ScalarHandler<Integer>(), statementId, inClauseVariant);
         }
     }
 
@@ -146,7 +138,7 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     }
 
     @Override
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
         try {
             DbUtils.close(conn);
         } catch (SQLException e) {
@@ -154,15 +146,13 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
         }
     }
 
-    private void failIfClosed() throws IOException {
-        synchronized(conn) {
-            boolean isClosed = true;
-            try {
-                isClosed = conn.isClosed();
-            } catch (SQLException e) {/* Do Nothing */ }
-            if (isClosed) {
-                throw new IOException("Repository closed");
-            }
+    private synchronized void failIfClosed() throws IOException {
+        boolean isClosed = true;
+        try {
+            isClosed = conn.isClosed();
+        } catch (SQLException e) {/* Do Nothing */ }
+        if (isClosed) {
+            throw new IOException("Repository closed");
         }
     }
 }

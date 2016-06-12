@@ -1,7 +1,6 @@
 package org.hackerpeers.sqli.analyzer;
 
 import org.testng.annotations.AfterMethod;
-import org.testng.annotations.Test;
 
 import java.io.IOException;
 
@@ -10,7 +9,7 @@ import java.io.IOException;
  */
 public class SQLInjectionRepositoryH2Test extends ISQLInjectionRepositoryTest<SQLInjectionRepositoryH2> {
     private static final String AN_H2_DB_FILENAME = "mem:"; //In-memory
-
+    //private static final String AN_H2_DB_FILENAME = "./src/test/resources/EmptyDB";
 
     @AfterMethod
     void resetDb() throws IOException {
@@ -19,11 +18,6 @@ public class SQLInjectionRepositoryH2Test extends ISQLInjectionRepositoryTest<SQ
 
     @Override
     SQLInjectionRepositoryH2 createRepo() throws Exception {
-        return new SQLInjectionRepositoryH2("mem:");
-    }
-
-    @Test(expectedExceptions = IOException.class, expectedExceptionsMessageRegExp = "Error updating the database")
-    void whenThereIsALiquibaseErrorConstructorReportsAnIOException() throws Exception {
-
+        return new SQLInjectionRepositoryH2(AN_H2_DB_FILENAME);
     }
 }

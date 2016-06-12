@@ -16,10 +16,10 @@
             <column name="id" type="INTEGER" autoIncrement="true">
                 <constraints nullable="false"/>
             </column>
-            <column name="value" type="VARCHAR(255)">
+            <column name="entryPointId" type="INTEGER">
                 <constraints nullable="false"/>
             </column>
-            <column name="entryPointId" type="INTEGER">
+            <column name="value" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
         </createTable>
