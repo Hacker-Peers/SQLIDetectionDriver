@@ -70,13 +70,13 @@ public class SQLIAnalyzerConfigHelperTest {
         assertEquals(config.getAnalyzerRegexSimplifiers().size(), 2);
         assertEquals(config.getAnalyzerRegexSimplifiers().get("Stats_[0-9]+"), "Stats_");
         assertEquals(config.getAnalyzerRegexSimplifiers().get("Structs_[0-9]+"), "Structs_");
-        assertEquals(config.getAnalyzerRealDriver(), "com.mysql.jdbc.Driver");
-        assertEquals(config.getAnalyzerRealJdbc(), "mysql");
+        assertEquals(config.getAnalyzerRealDriver(), "org.h2.Driver");
+        assertEquals(config.getAnalyzerRealJdbc(), "h2");
         assertNotNull(config.getAnalyzerEntrypointPackages());
-        assertEquals(config.getAnalyzerEntrypointPackages().iterator(), Arrays.asList("com.pld.sqli.demo").iterator());
+        assertEquals(config.getAnalyzerEntrypointPackages().iterator(), Arrays.asList("org.hackerpeers.sqli.spec").iterator());
         assertNotNull(config.getAnalyzerEntrypointSafezones());
         assertEquals(config.getAnalyzerEntrypointSafezones().iterator(),
-                Arrays.asList("com.pld.sqli.demo.test.", "com.pld.sqli.demo.test2.DemoIgnored#", "com.pld.sqli.demo.test3.DemoIngored#doDemo()").iterator());
+                Arrays.asList("org.hackerpeers.sqli.demo.test.", "org.hackerpeers.sqli.demo.test2.DemoIgnored#", "org.hackerpeers.sqli.demo.test3.DemoIngored#doDemo()").iterator());
         assertEquals(config.getAnalyzerLogThresholdSevere(), -1L);
         assertEquals(config.getAnalyzerLogThresholdWarning(), -1L);
         assertEquals(config.getAnalyzerLogThresholdInfo(), 1000L);
