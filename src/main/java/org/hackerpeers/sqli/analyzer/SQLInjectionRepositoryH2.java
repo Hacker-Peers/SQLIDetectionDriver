@@ -63,27 +63,35 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     public SQLInjectionRepositoryH2(final String dbFilename) throws SQLException, ClassNotFoundException {
         Class.forName("org.h2.Driver");
         try {
-            conn = DriverManager.getConnection("jdbc:h2:" + dbFilename + ";MV_STORE=FALSE;MVCC=FALSE");
-            initSchema(conn);
+            setConnection(DriverManager.getConnection("jdbc:h2:" + dbFilename + ";MV_STORE=FALSE;MVCC=FALSE"));
+            initSchema();
         } catch (SQLException e) {
-            DbUtils.closeQuietly(conn);
+            DbUtils.closeQuietly(getConnection());
             throw e;
         }
     }
 
+    Connection getConnection() {
+        return conn;
+    }
+
+    void setConnection(Connection conn) {
+        this.conn = conn;
+    }
+
     /**
      * Initialize and updates the database schema if needed.
-     * @param conn The connection to the DB
      * @throws SQLException If Liquibase experiences any issues.
      */
-    private void initSchema(final Connection conn) throws SQLException {
+    void initSchema() throws SQLException {
+        final Connection conn = getConnection();
         try {
             //http://www.liquibase.org/2015/07/executing-liquibase.html
             Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(conn));
             Liquibase liquibase = new Liquibase(CHANGELOG_FILENAME, new ClassLoaderResourceAccessor(SQLInjectionRepositoryH2.class.getClassLoader()), database);
             liquibase.update(new Contexts(), new LabelExpression());
         } catch (LiquibaseException e) {
-            throw new SQLException("Error updating the database", e);
+            throw new SQLException("Error setting up or upgrading the database", e);
         }
     }
 
@@ -92,7 +100,7 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
         failIfClosed();
         try {
             persistInClauseVariant(persistEntryPointStatement(persistEntryPoint(entryPoint), persistStatement(statement)), inClauseVariant);
-            conn.commit();
+            getConnection().commit();
         } catch (SQLException ex) {
             throw new IOException("Error persisting data", ex);
         }
@@ -104,12 +112,12 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
      * @return The entry point record ID.
      * @throws SQLException If there is any database issues.
      */
-    private int persistEntryPoint(final String entryPoint) throws SQLException {
+    int persistEntryPoint(final String entryPoint) throws SQLException {
         QueryRunner qr = new QueryRunner();
 
-        Integer entryPointId = qr.query(conn, FIND_ENTRY_POINT_SQL, new ScalarHandler<Integer>(1), entryPoint);
+        Integer entryPointId = qr.query(getConnection(), FIND_ENTRY_POINT_SQL, new ScalarHandler<Integer>(1), entryPoint);
         if (entryPointId == null) {
-            entryPointId = qr.insert(conn, INSERT_ENTRY_POINT_SQL, new ScalarHandler<Integer>(), entryPoint);
+            entryPointId = qr.insert(getConnection(), INSERT_ENTRY_POINT_SQL, new ScalarHandler<Integer>(), entryPoint);
         }
 
         return entryPointId;
@@ -124,9 +132,9 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     private int persistStatement(final String statement) throws SQLException {
         QueryRunner qr = new QueryRunner();
 
-        Integer statementId = qr.query(conn, FIND_STATEMENT_SQL, new ScalarHandler<Integer>(1), statement);
+        Integer statementId = qr.query(getConnection(), FIND_STATEMENT_SQL, new ScalarHandler<Integer>(1), statement);
         if (statementId == null) {
-            statementId = qr.insert(conn, INSERT_STATEMENT_SQL, new ScalarHandler<Integer>(), statement);
+            statementId = qr.insert(getConnection(), INSERT_STATEMENT_SQL, new ScalarHandler<Integer>(), statement);
         }
 
         return statementId;
@@ -142,9 +150,9 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     private int persistEntryPointStatement(final int entryPointId, final int statementId) throws SQLException {
         QueryRunner qr = new QueryRunner();
 
-        Integer entryPintStatementId = qr.query(conn, FIND_ENTRY_POINT_STATEMENT_SQL, new ScalarHandler<Integer>(1), entryPointId, statementId);
+        Integer entryPintStatementId = qr.query(getConnection(), FIND_ENTRY_POINT_STATEMENT_SQL, new ScalarHandler<Integer>(1), entryPointId, statementId);
         if (entryPintStatementId == null) {
-            entryPintStatementId = qr.insert(conn, INSERT_ENTRY_POINT_STATEMENT_SQL, new ScalarHandler<Integer>(), entryPointId, statementId);
+            entryPintStatementId = qr.insert(getConnection(), INSERT_ENTRY_POINT_STATEMENT_SQL, new ScalarHandler<Integer>(), entryPointId, statementId);
         }
 
         return entryPintStatementId;
@@ -159,9 +167,9 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     private void persistInClauseVariant(final int entryPointStatementId, final int inClauseVariant) throws SQLException {
         QueryRunner qr = new QueryRunner();
 
-        Integer variant = qr.query(conn, FIND_IN_CLAUSE_SQL, new ScalarHandler<Integer>(1), entryPointStatementId, inClauseVariant);
+        Integer variant = qr.query(getConnection(), FIND_IN_CLAUSE_SQL, new ScalarHandler<Integer>(1), entryPointStatementId, inClauseVariant);
         if (variant == null) {
-            qr.insert(conn, INSERT_IN_CLAUSE_SQL, new ScalarHandler<Integer>(), entryPointStatementId, inClauseVariant);
+            qr.insert(getConnection(), INSERT_IN_CLAUSE_SQL, new ScalarHandler<Integer>(), entryPointStatementId, inClauseVariant);
         }
     }
 
@@ -190,7 +198,7 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
      */
     private List<SQLInjectionAnalyzerEntry> getUncombinedEntriesFromDB() throws IOException {
         List<SQLInjectionAnalyzerEntry> uncombinedEntries = new ArrayList<>();
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(GET_ALL_DATA_SQL)) {
+        try (Statement stmt = getConnection().createStatement(); ResultSet rs = stmt.executeQuery(GET_ALL_DATA_SQL)) {
             while (rs.next()) {
                 String entryPoint = rs.getString("entryPoint");
                 String statement = rs.getString("statement");
@@ -206,7 +214,7 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     @Override
     public synchronized void close() throws IOException {
         try {
-            DbUtils.close(conn);
+            DbUtils.close(getConnection());
         } catch (SQLException e) {
             throw new IOException("Error closing DB connection", e);
         }
@@ -219,7 +227,7 @@ public class SQLInjectionRepositoryH2 implements ISQLInjectionRepository {
     private synchronized void failIfClosed() throws IOException {
         boolean isClosed = true;
         try {
-            isClosed = conn.isClosed();
+            isClosed = getConnection().isClosed();
         } catch (SQLException e) {/* Do Nothing */ }
         if (isClosed) {
             throw new IOException("Repository closed");
