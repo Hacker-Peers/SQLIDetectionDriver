@@ -2,9 +2,12 @@ package org.hackerpeers.sqli.analyzer;
 
 import org.testng.annotations.Test;
 
+import java.io.IOException;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 
 /**
@@ -16,6 +19,11 @@ public class SQLInjectionRepositoryFixedInMemoryTest extends ISQLInjectionReposi
     @Override
     SQLInjectionRepositoryFixedInMemory createRepo() {
         return new SQLInjectionRepositoryFixedInMemory(cfg, A_BUFFER_SIZE);
+    }
+
+    @Test
+    public void whenRepoIsCreatedItIsEmpty() throws IOException {
+        assertThat(repo.getEntries().size(), equalTo(0));
     }
 
     @Test

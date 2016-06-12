@@ -10,7 +10,6 @@ import java.io.IOException;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsCollectionContaining.hasItem;
-import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.Mockito.spy;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -35,18 +34,13 @@ public abstract class ISQLInjectionRepositoryTest<R extends ISQLInjectionReposit
      * Create the concrete repo. Do NOT create a mock or add a spy, it will be taken care of.
      * @return A new repo instance.
      */
-    abstract R createRepo();
+    abstract R createRepo() throws Exception;
 
     @BeforeMethod
-    void givenARepo() {
+    void givenARepo() throws Exception {
         initMocks(this); //or else mocks are going to stay null when setting up the analyzer.
 
         repo = spy(createRepo());
-    }
-
-    @Test
-    public void whenRepoIsCreatedItIsEmpty() throws IOException {
-        assertThat(repo.getEntries().size(), equalTo(0));
     }
 
     @Test
