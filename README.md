@@ -115,9 +115,6 @@ analyzer.log.threshold.fine=0
 
 ```
 
-## Download section
-Download [latest](https://circleci.com/api/v1/project/Hacker-Peers/SQLIDetectionDriver/latest/artifacts/0/$CIRCLE_ARTIFACTS/sqlidriver-2.0-SNAPSHOT.jar)
-
 ## Sample
 
 ```java
@@ -243,7 +240,7 @@ public class DemoMySqlDriver {
         properties.put("password", "sqli");
         String url = "jdbc:sqli://localhost/sqliDriver";
 
-        Class.forName("AnalyzerDriver");
+        Class.forName("org.hackerpeers.sqli.driver.AnalyzerDriver");
         Connection c = DriverManager.getConnection(url, properties);
         return c;
     }
@@ -258,7 +255,7 @@ public class DemoMySqlDriver {
         properties.put("password", "sqli");
         String url = "jdbc:sqli:thin:@localhost:1521:orcl";
 
-        Class.forName("AnalyzerDriver");
+        Class.forName("org.hackerpeers.sqli.driver.AnalyzerDriver");
         Connection c = DriverManager.getConnection(url, properties);
         return c;
     }
