@@ -10,6 +10,9 @@ The purpose of this library is not to be deployed in production but in QA enviro
 In order to control the SQLIDetectionDriver, you need to add a SQLIAnalyzer.properties file in
 your ClassLoader resource path.
 
+## Download section
+Download [latest](https://circleci.com/api/v1/project/Hacker-Peers/SQLIDetectionDriver/latest/artifacts/0/$CIRCLE_ARTIFACTS/sqlidriver-2.0-SNAPSHOT.jar)
+
 ## Configuration
 Once you have configured the SQLIDectectionDriver (see below), you can start using it like this:
 ```java
