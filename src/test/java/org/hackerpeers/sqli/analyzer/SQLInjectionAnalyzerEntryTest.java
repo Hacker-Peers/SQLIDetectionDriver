@@ -12,7 +12,7 @@ import static org.hamcrest.core.Is.is;
  * Test methods in SQLInjectionAnalyzerEntry class.
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class SQLInjectionAnalyzerEntryJMockitTest {
+public class SQLInjectionAnalyzerEntryTest {
 
     private static final String AN_ENTRY_POINT = "my.entry.point";
     private static final String ANOTHER_ENTRY_POINT = "another.entry.point";
