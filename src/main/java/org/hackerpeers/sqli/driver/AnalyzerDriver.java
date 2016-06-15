@@ -55,7 +55,7 @@ public class AnalyzerDriver implements Driver {
         }
         realDriver = (Driver) Class.forName(cfg.getAnalyzerRealDriver()).newInstance();
         repo = new SQLInjectionRepositoryImpl(cfg);
-        analyzer = new SQLInjectionAnalyzerImpl(cfg, repo, Executors.newFixedThreadPool(50));
+        analyzer = new SQLInjectionAnalyzerImpl(cfg, repo, Executors.newFixedThreadPool(cfg.getAnalyzerThreadPoolSize()));
     }
 
     private static AnalyzerDriver getDriver() throws SQLException {

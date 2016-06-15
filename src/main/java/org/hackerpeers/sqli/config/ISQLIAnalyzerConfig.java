@@ -77,4 +77,9 @@ public interface ISQLIAnalyzerConfig {
      * @return If true, the Analyzer will use local disk storage.
      */
     boolean isAnalyzerUseDiskStorage();
+
+    /**
+     * @return The maximum size the analyzer thread pool should have.
+     */
+    int getAnalyzerThreadPoolSize();
 }
