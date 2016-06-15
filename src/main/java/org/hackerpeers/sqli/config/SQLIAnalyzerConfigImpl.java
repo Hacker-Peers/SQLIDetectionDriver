@@ -12,6 +12,7 @@ class SQLIAnalyzerConfigImpl implements ISQLIAnalyzerConfig {
     private boolean analyzerActive;
     private boolean analyzerUseDiskStorage;
     private int analyzerMaxSizeInMemory;
+    private int analyzerThreadPoolSize;
     private String analyzerStoragePath;
     private Map<String, String> analyzerRegexSimplifiers;
     private String analyzerRealDriver;
@@ -147,5 +148,14 @@ class SQLIAnalyzerConfigImpl implements ISQLIAnalyzerConfig {
 
     protected void setAnalyzerUseDiskStorage(boolean analyzerUseDiskStorage) {
         this.analyzerUseDiskStorage = analyzerUseDiskStorage;
+    }
+
+    @Override
+    public int getAnalyzerThreadPoolSize() {
+        return analyzerThreadPoolSize;
+    }
+
+    protected void setAnalyzerThreadPoolSize(int analyzerThreadPoolSize) {
+        this.analyzerThreadPoolSize = analyzerThreadPoolSize;
     }
 }

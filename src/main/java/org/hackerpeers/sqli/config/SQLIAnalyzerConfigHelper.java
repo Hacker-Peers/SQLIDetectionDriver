@@ -12,6 +12,8 @@ import java.util.*;
  */
 public class SQLIAnalyzerConfigHelper {
     private static final String CONFIG_FILE_NAME = "SQLIAnalyzer.properties";
+    private static final int DEFAULT_THREAD_POOL_SIZE = 50;
+    private static final int DEFAULT_MAX_SIZE_IN_MEMORY = 100;
 
     /**
      * Search for the first resource matching the propertiesFile name.
@@ -43,7 +45,8 @@ public class SQLIAnalyzerConfigHelper {
 
         // Load storage settings.
         cfg.setAnalyzerUseDiskStorage(Boolean.parseBoolean(props.getProperty("analyzer.active", "false")));
-        cfg.setAnalyzerMaxSizeInMemory(NumberUtils.toInt(props.getProperty("analyzer.maxSizeInMemory"), 100));
+        cfg.setAnalyzerMaxSizeInMemory(NumberUtils.toInt(props.getProperty("analyzer.maxSizeInMemory"), DEFAULT_MAX_SIZE_IN_MEMORY));
+        cfg.setAnalyzerThreadPoolSize(NumberUtils.toInt(props.getProperty("analyzer.threadPoolSize"), DEFAULT_THREAD_POOL_SIZE));
         cfg.setAnalyzerStoragePath(props.getProperty("analyzer.storage.path", null));
 
         // Load RegEx simplifiers.

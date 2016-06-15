@@ -21,6 +21,7 @@ public class SQLIAnalyzerConfigHelperTest {
         assertEquals(config.isAnalyzerActive(), false);
         assertEquals(config.isAnalyzerUseDiskStorage(), false);
         assertEquals(config.getAnalyzerMaxSizeInMemory(), 0);
+        assertEquals(config.getAnalyzerThreadPoolSize(), 0);
         assertNull(config.getAnalyzerStoragePath());
         assertNull(config.getAnalyzerRegexSimplifiers());
         assertNull(config.getAnalyzerRealDriver());
@@ -42,6 +43,7 @@ public class SQLIAnalyzerConfigHelperTest {
         assertEquals(config.isAnalyzerActive(), false);
         assertEquals(config.isAnalyzerUseDiskStorage(), false);
         assertEquals(config.getAnalyzerMaxSizeInMemory(), 100);
+        assertEquals(config.getAnalyzerThreadPoolSize(), 50);
         assertNull(config.getAnalyzerStoragePath());
         assertNotNull(config.getAnalyzerRegexSimplifiers());
         assertTrue(config.getAnalyzerRegexSimplifiers().isEmpty());
@@ -65,6 +67,7 @@ public class SQLIAnalyzerConfigHelperTest {
         assertEquals(config.isAnalyzerActive(), true);
         assertEquals(config.isAnalyzerUseDiskStorage(), true);
         assertEquals(config.getAnalyzerMaxSizeInMemory(), 100);
+        assertEquals(config.getAnalyzerThreadPoolSize(), 50);
         assertEquals(config.getAnalyzerStoragePath(), "./target/SQLIAnalyzer");
         assertNotNull(config.getAnalyzerRegexSimplifiers());
         assertEquals(config.getAnalyzerRegexSimplifiers().size(), 2);
