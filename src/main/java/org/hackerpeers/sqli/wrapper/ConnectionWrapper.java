@@ -2,6 +2,7 @@ package org.hackerpeers.sqli.wrapper;
 
 import org.hackerpeers.sqli.analyzer.ISQLInjectionAnalyzer;
 
+import java.lang.reflect.Proxy;
 import java.sql.*;
 import java.util.Map;
 import java.util.Properties;
@@ -29,7 +30,10 @@ public class ConnectionWrapper implements Connection {
 
     @Override
     public Statement createStatement() throws SQLException {
-        return new StatementWrapper(analyzer, realConn.createStatement());
+        Class[] proxyInterfaces = new Class[] {Statement.class};
+        Statement proxy = (Statement) Proxy.newProxyInstance(Statement.class.getClassLoader(), proxyInterfaces, new StatementDelegator<Statement>(this, analyzer, realConn.createStatement()));
+        return proxy;
+//        return new StatementWrapper(analyzer, realConn.createStatement());
     }
 
     @Override

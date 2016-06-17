@@ -52,7 +52,11 @@ public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
 
         ((Method) wrappedMethod).invoke(wrapper, params);
 
-        ((Method) wrappedMethod).invoke(verify(mockBasicClass, times(1)), params);
+        int invokeCount = 1;
+//        if (((Method) wrappedMethod).getName().equals("getConnection")) {
+//            invokeCount = 0;
+//        }
+        ((Method) wrappedMethod).invoke(verify(mockBasicClass, times(invokeCount)), params);
         assertSetterCatchParameters(wrapper, ((Method) wrappedMethod).getName(), params);
     }
 

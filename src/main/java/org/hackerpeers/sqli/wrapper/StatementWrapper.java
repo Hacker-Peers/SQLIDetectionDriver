@@ -288,7 +288,7 @@ class StatementWrapper<S extends Statement> implements Statement {
     public boolean isWrapperFor(Class<?> type) throws SQLException {
         return realStatement.isWrapperFor(type);
     }
-    
+
     /**
      * @return The stocked parameters for batch processing.
      */
