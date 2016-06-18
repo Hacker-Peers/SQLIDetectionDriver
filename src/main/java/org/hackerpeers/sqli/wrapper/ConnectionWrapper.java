@@ -31,14 +31,21 @@ public class ConnectionWrapper implements Connection {
     @Override
     public Statement createStatement() throws SQLException {
         Class[] proxyInterfaces = new Class[] {Statement.class};
-        Statement proxy = (Statement) Proxy.newProxyInstance(Statement.class.getClassLoader(), proxyInterfaces, new StatementDelegator<Statement>(this, analyzer, realConn.createStatement()));
-        return proxy;
+        return (Statement) Proxy.newProxyInstance(
+                Statement.class.getClassLoader(),
+                proxyInterfaces,
+                new StatementDelegator<>(this, analyzer, realConn.createStatement()));
 //        return new StatementWrapper(analyzer, realConn.createStatement());
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
-        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql), sql);
+        Class[] proxyInterfaces = new Class[]{PreparedStatement.class};
+        return (PreparedStatement) Proxy.newProxyInstance(
+                PreparedStatement.class.getClassLoader(),
+                proxyInterfaces,
+                new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql), sql));
+//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql), sql);
     }
 
     @Override
@@ -128,12 +135,22 @@ public class ConnectionWrapper implements Connection {
 
     @Override
     public Statement createStatement(int i, int i1) throws SQLException {
-        return new StatementWrapper(analyzer, realConn.createStatement(i, i1));
+        Class[] proxyInterfaces = new Class[]{Statement.class};
+        return (Statement) Proxy.newProxyInstance(
+                Statement.class.getClassLoader(),
+                proxyInterfaces,
+                new StatementDelegator<>(this, analyzer, realConn.createStatement(i, i1)));
+//        return new StatementWrapper(analyzer, realConn.createStatement(i, i1));
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int i, int i1) throws SQLException {
-        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i, i1), sql);
+        Class[] proxyInterfaces = new Class[]{PreparedStatement.class};
+        return (PreparedStatement) Proxy.newProxyInstance(
+                PreparedStatement.class.getClassLoader(),
+                proxyInterfaces,
+                new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, i, i1), sql));
+//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i, i1), sql);
     }
 
     @Override
@@ -183,12 +200,22 @@ public class ConnectionWrapper implements Connection {
 
     @Override
     public Statement createStatement(int i, int i1, int i2) throws SQLException {
-        return new StatementWrapper(analyzer, realConn.createStatement(i, i1, i2));
+        Class[] proxyInterfaces = new Class[]{Statement.class};
+        return (Statement) Proxy.newProxyInstance(
+                Statement.class.getClassLoader(),
+                proxyInterfaces,
+                new StatementDelegator<>(this, analyzer, realConn.createStatement(i, i1, i2)));
+//        return new StatementWrapper(analyzer, realConn.createStatement(i, i1, i2));
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int i, int i1, int i2) throws SQLException {
-        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i, i1, i2), sql);
+        Class[] proxyInterfaces = new Class[]{PreparedStatement.class};
+        return (PreparedStatement) Proxy.newProxyInstance(
+                PreparedStatement.class.getClassLoader(),
+                proxyInterfaces,
+                new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, i, i1, i2), sql));
+//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i, i1, i2), sql);
     }
 
     @Override
@@ -198,17 +225,32 @@ public class ConnectionWrapper implements Connection {
 
     @Override
     public PreparedStatement prepareStatement(String sql, int i) throws SQLException {
-        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i), sql);
+        Class[] proxyInterfaces = new Class[]{PreparedStatement.class};
+        return (PreparedStatement) Proxy.newProxyInstance(
+                PreparedStatement.class.getClassLoader(),
+                proxyInterfaces,
+                new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, i), sql));
+//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i), sql);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, int[] ints) throws SQLException {
-        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, ints), sql);
+        Class[] proxyInterfaces = new Class[]{PreparedStatement.class};
+        return (PreparedStatement) Proxy.newProxyInstance(
+                PreparedStatement.class.getClassLoader(),
+                proxyInterfaces,
+                new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, ints), sql));
+//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, ints), sql);
     }
 
     @Override
     public PreparedStatement prepareStatement(String sql, String[] strings) throws SQLException {
-        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, strings), sql);
+        Class[] proxyInterfaces = new Class[]{PreparedStatement.class};
+        return (PreparedStatement) Proxy.newProxyInstance(
+                PreparedStatement.class.getClassLoader(),
+                proxyInterfaces,
+                new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, strings), sql));
+//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, strings), sql);
     }
 
     @Override

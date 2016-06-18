@@ -6,8 +6,11 @@ import org.hackerpeers.sqli.analyzer.ISQLInjectionAnalyzer;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Wrapper around the real statement.
@@ -19,19 +22,12 @@ class StatementDelegator<S extends Statement> implements InvocationHandler {
     private Connection connection;
     private S realStatement;
     private List<String> batchSQL = new ArrayList<>();
-    private Map<Object, Object> params = new TreeMap<>();
-    private List<Map<Object, Object>> batchParams = new ArrayList<>();
-    private String sql;
     private ISQLInjectionAnalyzer analyzer;
-    private static final Set<String> OVERWRITTEN_METHODS = new HashSet<>();
-    static {
-        OVERWRITTEN_METHODS.add("addBatch");
-        OVERWRITTEN_METHODS.add("clearBatch");
-        OVERWRITTEN_METHODS.add("getConnection");
-    }
 
     /**
      * Wrapper constructor on the real statement.
+     * @param conn The connection calling this statement.
+     * @param analyzer The SQLInjectionAnalyzer service.
      * @param realStatement The real statement.
      */
     StatementDelegator(Connection conn, ISQLInjectionAnalyzer analyzer, S realStatement) {
@@ -49,38 +45,35 @@ class StatementDelegator<S extends Statement> implements InvocationHandler {
         return realStatement;
     }
 
-    public void addBatch(String sql) throws SQLException {
+    private void addBatch(String sql) throws SQLException {
         batchSQL.add(sql);
         getRealStatement().addBatch(sql);
     }
 
-    public void clearBatch() throws SQLException {
+    List<String> getBatchSQL() {
+        return batchSQL;
+    }
+
+    private void clearBatch() throws SQLException {
         batchSQL.clear();
         getRealStatement().clearBatch();
     }
 
-    public Connection getConnection() throws SQLException {
+    Connection getConnection() throws SQLException {
         return new ConnectionWrapper(analyzer, realStatement.getConnection());
 //        return connection;
-    }
-
-    /**
-     * @return The stocked parameters for batch processing.
-     */
-    protected List<Map<Object, Object>> getBatchParameters() {
-        return null;
     }
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         if (StringUtils.startsWith(method.getName(), "execute")) {
             return execute(method, args);
-        } else if (StringUtils.startsWith(method.getName(), "getConnection")) {
+        } else if (StringUtils.equals(method.getName(), "getConnection")) {
             return getConnection();
-        } else if (StringUtils.startsWith(method.getName(), "addBatch")) {
+        } else if (StringUtils.equals(method.getName(), "addBatch") && args.length == 1) {
             addBatch((String) args[0]);
             return null;
-        } else if (StringUtils.startsWith(method.getName(), "clearBatch")) {
+        } else if (StringUtils.equals(method.getName(), "clearBatch")) {
             clearBatch();
             return null;
         } else {
@@ -92,11 +85,15 @@ class StatementDelegator<S extends Statement> implements InvocationHandler {
         long start = System.currentTimeMillis();
         Object result = method.invoke(getRealStatement(), args);
         long end = System.currentTimeMillis();
+        analyze(method, args, start, end);
+        return result;
+    }
+
+    void analyze(Method method, Object[] args, long start, long end) {
         if (StringUtils.containsIgnoreCase(method.getName(), "batch")) {
-            getAnalyzer().analyze(batchSQL, getBatchParameters(), start, end);
+            getAnalyzer().analyze(batchSQL, null, start, end);
         } else {
             getAnalyzer().analyze((String) args[0], null, start, end);
         }
-        return result;
     }
 }
