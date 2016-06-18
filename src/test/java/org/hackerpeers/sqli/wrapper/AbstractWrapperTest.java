@@ -1,5 +1,6 @@
 package org.hackerpeers.sqli.wrapper;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.hackerpeers.sqli.analyzer.ISQLInjectionAnalyzer;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -21,7 +22,7 @@ import static org.testng.Assert.*;
 
 /**
  * @author pldupont@gmail.com
- * 06/06/2016.
+ *         06/06/2016.
  */
 public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
     private static final Set<String> SETTER_EXCEPTIONS = new HashSet<>(Arrays.asList(
@@ -38,7 +39,8 @@ public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
     @DataProvider(name = "methods")
     public Iterator<Object[]> methods() throws ClassNotFoundException {
         List<Object[]> result = new ArrayList<>();
-        addMethodsFromInterface(getBasicClass(), result);
+        Class clazz = getBasicClass();
+        addInterfaces(clazz, result);
         addMethodsFromInterface(Wrapper.class, result);
         return result.iterator();
     }
@@ -61,35 +63,62 @@ public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
     }
 
     private void assertSetterCatchParameters(W wrapper, String methodName, Object[] params) {
-        if (methodName.startsWith("set")
-                && wrapper instanceof PreparedStatementWrapper) {
-            assertFalse(((PreparedStatementWrapper) wrapper).getParameters().isEmpty());
+        if (methodName.startsWith("set") && params.length >= 2) {
+            if (wrapper instanceof PreparedStatementWrapper) {
+                assertFalse(((PreparedStatementWrapper) wrapper).getParameters().isEmpty());
 
-            if (methodName.equals("setNull")) {
-                assertNull(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]));
-            } else if (SETTER_EXCEPTIONS.contains(methodName)
-                    && !(params[1] instanceof Blob || params[1] instanceof Clob)) {
-                StringBuilder expResult = new StringBuilder(methodName.replaceFirst("set", ""));
-                for (int i = 1; i < params.length; i++) {
-                    expResult.append("-");
-                    if (i == 1) {
-                        String paramClassName = params[i].getClass().getSimpleName();
-                        int mockSuffix = paramClassName.indexOf("$$EnhancerByMockito");
-                        if (mockSuffix > 0) {
-                            expResult.append(paramClassName.substring(0, mockSuffix));
+                if (methodName.equals("setNull")) {
+                    assertNull(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]));
+                } else if (SETTER_EXCEPTIONS.contains(methodName)
+                        && !(params[1] instanceof Blob || params[1] instanceof Clob)) {
+                    StringBuilder expResult = new StringBuilder(methodName.replaceFirst("set", ""));
+                    for (int i = 1; i < params.length; i++) {
+                        expResult.append("-");
+                        if (i == 1) {
+                            String paramClassName = params[i].getClass().getSimpleName();
+                            int mockSuffix = paramClassName.indexOf("$$EnhancerByMockito");
+                            if (mockSuffix > 0) {
+                                expResult.append(paramClassName.substring(0, mockSuffix));
+                            } else {
+                                expResult.append(paramClassName);
+                            }
                         } else {
-                            expResult.append(paramClassName);
+                            expResult.append(params[i]);
                         }
-                    } else {
-                        expResult.append(params[i]);
                     }
+                    assertEquals(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]), "[" + expResult.toString() + "]");
+                } else {
+                    assertEquals(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]), params[1]);
                 }
-                assertEquals(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]), "[" + expResult.toString() + "]");
-            } else {
-                assertEquals(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]), params[1]);
+//            } else if (wrapper instanceof PreparedStatement) {
+//                assertFalse(((PreparedStatementDelegator) wrapper).getParameters().isEmpty());
+//
+//                if (methodName.equals("setNull")) {
+//                    assertNull(((PreparedStatementDelegator) wrapper).getParameters().get(params[0]));
+//                } else if (SETTER_EXCEPTIONS.contains(methodName)
+//                        && !(params[1] instanceof Blob || params[1] instanceof Clob)) {
+//                    StringBuilder expResult = new StringBuilder(methodName.replaceFirst("set", ""));
+//                    for (int i = 1; i < params.length; i++) {
+//                        expResult.append("-");
+//                        if (i == 1) {
+//                            String paramClassName = params[i].getClass().getSimpleName();
+//                            int mockSuffix = paramClassName.indexOf("$$EnhancerByMockito");
+//                            if (mockSuffix > 0) {
+//                                expResult.append(paramClassName.substring(0, mockSuffix));
+//                            } else {
+//                                expResult.append(paramClassName);
+//                            }
+//                        } else {
+//                            expResult.append(params[i]);
+//                        }
+//                    }
+//                    assertEquals(((PreparedStatementDelegator) wrapper).getParameters().get(params[0]), "[" + expResult.toString() + "]");
+//                } else {
+//                    assertEquals(((PreparedStatementDelegator) wrapper).getParameters().get(params[0]), params[1]);
+//                }
+
             }
         }
-
     }
 
     protected abstract W getWrapperInstance(ISQLInjectionAnalyzer analyzer, B mockBasicClass);
@@ -140,6 +169,17 @@ public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
             }
         }
         return params.toArray();
+    }
+
+    private void addInterfaces(Class<?> clazz, List<Object[]> result) {
+        if (clazz != null && clazz != Wrapper.class) {
+            addMethodsFromInterface(clazz, result);
+            if (ArrayUtils.isNotEmpty(clazz.getInterfaces())) {
+                for (Class<?> superClazz : clazz.getInterfaces()) {
+                    addInterfaces(superClazz, result);
+                }
+            }
+        }
     }
 
     private void addMethodsFromInterface(Class<?> clazz, List<Object[]> result) {

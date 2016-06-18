@@ -105,7 +105,7 @@ class PreparedStatementDelegator<PS extends PreparedStatement> extends Statement
     /**
      * @return The map of current parameters passed to the prepared statement.
      */
-    private Map<Object, Object> getParameters() {
+    Map<Object, Object> getParameters() {
         return params;
     }
 
