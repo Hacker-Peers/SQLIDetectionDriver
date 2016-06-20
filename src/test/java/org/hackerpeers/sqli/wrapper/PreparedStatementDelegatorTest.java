@@ -13,7 +13,7 @@ import static org.mockito.Mockito.mock;
  *
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class PreparedStatementDelegatorTest extends AbstractDelegatorTest<PreparedStatement> {
+public class PreparedStatementDelegatorTest<PS extends PreparedStatement> extends AbstractDelegatorTest<PreparedStatement> {
 
     @Override
     protected PreparedStatement getDelegatorInstance(ISQLInjectionAnalyzer analyzer, PreparedStatement mockBasicClass) {

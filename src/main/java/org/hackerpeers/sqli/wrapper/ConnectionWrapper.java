@@ -35,7 +35,6 @@ public class ConnectionWrapper implements Connection {
                 Statement.class.getClassLoader(),
                 proxyInterfaces,
                 new StatementDelegator<>(this, analyzer, realConn.createStatement()));
-//        return new StatementWrapper(analyzer, realConn.createStatement());
     }
 
     @Override
@@ -45,12 +44,15 @@ public class ConnectionWrapper implements Connection {
                 PreparedStatement.class.getClassLoader(),
                 proxyInterfaces,
                 new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql), sql));
-//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql), sql);
     }
 
     @Override
     public CallableStatement prepareCall(String sql) throws SQLException {
-        return new CallableStatementWrapper(analyzer, realConn.prepareCall(sql), sql);
+        Class[] proxyInterfaces = new Class[]{CallableStatement.class};
+        return (CallableStatement) Proxy.newProxyInstance(
+                CallableStatement.class.getClassLoader(),
+                proxyInterfaces,
+                new CallableStatementDelegator<>(this, analyzer, realConn.prepareCall(sql), sql));
     }
 
     @Override
@@ -140,7 +142,6 @@ public class ConnectionWrapper implements Connection {
                 Statement.class.getClassLoader(),
                 proxyInterfaces,
                 new StatementDelegator<>(this, analyzer, realConn.createStatement(i, i1)));
-//        return new StatementWrapper(analyzer, realConn.createStatement(i, i1));
     }
 
     @Override
@@ -150,7 +151,6 @@ public class ConnectionWrapper implements Connection {
                 PreparedStatement.class.getClassLoader(),
                 proxyInterfaces,
                 new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, i, i1), sql));
-//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i, i1), sql);
     }
 
     @Override
@@ -205,7 +205,6 @@ public class ConnectionWrapper implements Connection {
                 Statement.class.getClassLoader(),
                 proxyInterfaces,
                 new StatementDelegator<>(this, analyzer, realConn.createStatement(i, i1, i2)));
-//        return new StatementWrapper(analyzer, realConn.createStatement(i, i1, i2));
     }
 
     @Override
@@ -215,7 +214,6 @@ public class ConnectionWrapper implements Connection {
                 PreparedStatement.class.getClassLoader(),
                 proxyInterfaces,
                 new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, i, i1, i2), sql));
-//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i, i1, i2), sql);
     }
 
     @Override
@@ -230,7 +228,6 @@ public class ConnectionWrapper implements Connection {
                 PreparedStatement.class.getClassLoader(),
                 proxyInterfaces,
                 new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, i), sql));
-//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, i), sql);
     }
 
     @Override
@@ -240,7 +237,6 @@ public class ConnectionWrapper implements Connection {
                 PreparedStatement.class.getClassLoader(),
                 proxyInterfaces,
                 new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, ints), sql));
-//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, ints), sql);
     }
 
     @Override
@@ -250,7 +246,6 @@ public class ConnectionWrapper implements Connection {
                 PreparedStatement.class.getClassLoader(),
                 proxyInterfaces,
                 new PreparedStatementDelegator<>(this, analyzer, realConn.prepareStatement(sql, strings), sql));
-//        return new PreparedStatementWrapper(analyzer, realConn.prepareStatement(sql, strings), sql);
     }
 
     @Override
