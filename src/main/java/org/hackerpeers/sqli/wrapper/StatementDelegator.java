@@ -60,8 +60,7 @@ class StatementDelegator<S extends Statement> implements InvocationHandler {
     }
 
     Connection getConnection() throws SQLException {
-        return new ConnectionWrapper(analyzer, realStatement.getConnection());
-//        return connection;
+        return connection;
     }
 
     @Override

@@ -13,10 +13,10 @@ import static org.mockito.Mockito.mock;
  *
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-public class PreparedStatementDelegatorTest extends AbstractWrapperTest<PreparedStatement, PreparedStatement> {
+public class PreparedStatementDelegatorTest extends AbstractDelegatorTest<PreparedStatement> {
 
     @Override
-    protected PreparedStatement getWrapperInstance(ISQLInjectionAnalyzer analyzer, PreparedStatement mockBasicClass) {
+    protected PreparedStatement getDelegatorInstance(ISQLInjectionAnalyzer analyzer, PreparedStatement mockBasicClass) {
         Class[] proxyInterfaces = new Class[]{PreparedStatement.class};
         return (PreparedStatement) Proxy.newProxyInstance(
                 PreparedStatement.class.getClassLoader(),

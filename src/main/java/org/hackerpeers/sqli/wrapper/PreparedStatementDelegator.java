@@ -70,6 +70,8 @@ class PreparedStatementDelegator<PS extends PreparedStatement> extends Statement
         Object value;
         if (StringUtils.equals(method.getName(), "setNull")) {
             value = "null, type:" + args[1];
+        } else if (StringUtils.equals(method.getName(), "setBytes")) {
+            value = new String((byte[]) args[1]);
         } else if (args[1] instanceof InputStream) {
             value = "[" + method.getName().replaceFirst("set", "") + "-InputStream]";
             if (args.length > 2) {
