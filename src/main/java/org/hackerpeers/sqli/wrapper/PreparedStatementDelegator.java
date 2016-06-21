@@ -21,7 +21,7 @@ import java.util.TreeMap;
  *
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
-class PreparedStatementDelegator<PS extends PreparedStatement> extends StatementDelegator<PreparedStatement> {
+class PreparedStatementDelegator<PS extends PreparedStatement> extends StatementDelegator<PS> {
 
     // Attributes
     private Map<Object, Object> params = new TreeMap<>();
