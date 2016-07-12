@@ -9,7 +9,7 @@ import java.sql.Connection;
 import static org.mockito.Mockito.mock;
 
 /**
- * Test methods in PreparedStatementWrapper class.
+ * Test methods in PreparedStatementDelegator class.
  *
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */

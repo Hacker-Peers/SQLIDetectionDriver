@@ -16,12 +16,12 @@ import java.sql.Statement;
  * Proxy around the real connection.
  * @author Simon Berthiaume (sberthiaume@gmail.com) based on Pierre-Luc Dupont (pldupont@gmail.com) work
  */
-class ConnectionDelegator implements InvocationHandler {
+public class ConnectionDelegator implements InvocationHandler {
 
     private Connection realConnection;
     private ISQLInjectionAnalyzer analyzer;
 
-    ConnectionDelegator(ISQLInjectionAnalyzer analyzer, Connection realConnection) {
+    public ConnectionDelegator(ISQLInjectionAnalyzer analyzer, Connection realConnection) {
         this.realConnection = realConnection;
         this.analyzer = analyzer;
     }

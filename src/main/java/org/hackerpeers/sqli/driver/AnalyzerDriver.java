@@ -3,10 +3,11 @@ package org.hackerpeers.sqli.driver;
 import org.hackerpeers.sqli.analyzer.*;
 import org.hackerpeers.sqli.config.ISQLIAnalyzerConfig;
 import org.hackerpeers.sqli.config.SQLIAnalyzerConfigHelper;
-import org.hackerpeers.sqli.wrapper.ConnectionWrapper;
+import org.hackerpeers.sqli.wrapper.ConnectionDelegator;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Proxy;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +18,7 @@ import java.util.logging.Logger;
 
 /**
  * Wrapper around a JDBC driver to detect SQLInjection.
+ *
  * @author Pierre-Luc Dupont (pldupont@gmail.com)
  */
 public class AnalyzerDriver implements Driver {
@@ -25,12 +27,12 @@ public class AnalyzerDriver implements Driver {
         try {
             DriverManager.registerDriver(new AnalyzerDriver());
         } catch (SQLException
-                    |IOException
-                    |IllegalAccessException
-                    |InstantiationException
-                    |ClassNotFoundException ex) {
+                | IOException
+                | IllegalAccessException
+                | InstantiationException
+                | ClassNotFoundException ex) {
             Logger.getLogger(AnalyzerDriver.class.getName()).log(Level.SEVERE,
-                        "Unable to load the real driver. Failed with exception.", ex);
+                    "Unable to load the real driver. Failed with exception.", ex);
         }
     }
 
@@ -88,7 +90,12 @@ public class AnalyzerDriver implements Driver {
     public Connection connect(String string, Properties prprts) throws SQLException {
         Connection conn = realDriver.connect(string.replaceFirst("sqli", cfg.getAnalyzerRealJdbc()), prprts);
         if (cfg.isAnalyzerActive()) {
-            conn = new ConnectionWrapper(analyzer, conn);
+            Class[] proxyInterfaces = new Class[]{Connection.class};
+            ConnectionDelegator delegator = new ConnectionDelegator(analyzer, conn);
+            conn = (Connection) Proxy.newProxyInstance(
+                    Connection.class.getClassLoader(),
+                    proxyInterfaces,
+                    delegator);
         }
         return conn;
     }
