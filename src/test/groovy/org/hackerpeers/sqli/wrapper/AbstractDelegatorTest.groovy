@@ -1,29 +1,22 @@
-package org.hackerpeers.sqli.wrapper;
+package org.hackerpeers.sqli.wrapper
 
-import org.hackerpeers.sqli.analyzer.ISQLInjectionAnalyzer;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.apache.commons.lang3.ArrayUtils
+import org.hackerpeers.sqli.analyzer.ISQLInjectionAnalyzer
+import org.testng.annotations.DataProvider
+import org.testng.annotations.Test
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.SQLException;
-import java.sql.Wrapper;
-import java.util.*;
+import java.lang.reflect.*
+import java.sql.SQLException
+import java.sql.Wrapper
 
-import static org.mockito.Mockito.*;
-import static org.testng.Assert.*;
+import static org.mockito.Mockito.*
+import static org.testng.Assert.*
 
 /**
  * @author pldupont@gmail.com
- * 06/06/2016.
+ *         06/06/2016.
  */
-public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
+public abstract class AbstractDelegatorTest<B extends Wrapper> {
     private static final Set<String> SETTER_EXCEPTIONS = new HashSet<>(Arrays.asList(
             "setCharacterStream",
             "setAsciiStream",
@@ -38,7 +31,8 @@ public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
     @DataProvider(name = "methods")
     public Iterator<Object[]> methods() throws ClassNotFoundException {
         List<Object[]> result = new ArrayList<>();
-        addMethodsFromInterface(getBasicClass(), result);
+        Class clazz = getBasicClass();
+        addInterfaces(clazz, result);
         addMethodsFromInterface(Wrapper.class, result);
         return result.iterator();
     }
@@ -47,48 +41,50 @@ public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
     public void testWrappedMethodIsCalled(Object wrappedMethod) throws InvocationTargetException, IllegalAccessException, InstantiationException, MalformedURLException, SQLException, ClassNotFoundException {
         B mockBasicClass = mock(getBasicClass());
         ISQLInjectionAnalyzer mockAnalyzer = mock(ISQLInjectionAnalyzer.class);
-        W wrapper = getWrapperInstance(mockAnalyzer, mockBasicClass);
+        B delegator = getDelegatorInstance(mockAnalyzer, mockBasicClass);
         Object[] params = getMethodParams((Method) wrappedMethod);
 
-        ((Method) wrappedMethod).invoke(wrapper, params);
+        ((Method) wrappedMethod).invoke(delegator, params);
 
-        ((Method) wrappedMethod).invoke(verify(mockBasicClass, times(1)), params);
-        assertSetterCatchParameters(wrapper, ((Method) wrappedMethod).getName(), params);
+        int invokeCount = 1;
+        if (((Method) wrappedMethod).getName().equals("getConnection")) {
+            invokeCount = 0;
+        }
+        ((Method) wrappedMethod).invoke(verify(mockBasicClass, times(invokeCount)), params);
+        assertSetterCatchParameters(delegator, ((Method) wrappedMethod).getName(), params);
     }
 
-    private void assertSetterCatchParameters(W wrapper, String methodName, Object[] params) {
-        if (methodName.startsWith("set")
-                && wrapper instanceof PreparedStatementWrapper) {
-            assertFalse(((PreparedStatementWrapper) wrapper).getParameters().isEmpty());
+    private void assertSetterCatchParameters(B delegator, String methodName, Object[] params) {
+        if (methodName.startsWith("set") && params.length >= 2) {
+            if (((Proxy) delegator).h instanceof PreparedStatementDelegator) {
+                PreparedStatementDelegator preparedStatementDelegator = (PreparedStatementDelegator) ((Proxy) delegator).h;
+                assertFalse(preparedStatementDelegator.getParameters().isEmpty());
 
-            if (methodName.equals("setNull")) {
-                assertNull(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]));
-            } else if (SETTER_EXCEPTIONS.contains(methodName)
-                    && !(params[1] instanceof Blob || params[1] instanceof Clob)) {
-                StringBuilder expResult = new StringBuilder(methodName.replaceFirst("set", ""));
-                for (int i = 1; i < params.length; i++) {
-                    expResult.append("-");
-                    if (i == 1) {
-                        String paramClassName = params[i].getClass().getSimpleName();
-                        int mockSuffix = paramClassName.indexOf("$$EnhancerByMockito");
-                        if (mockSuffix > 0) {
-                            expResult.append(paramClassName.substring(0, mockSuffix));
-                        } else {
-                            expResult.append(paramClassName);
-                        }
-                    } else {
-                        expResult.append(params[i]);
+                if (methodName.equals("setNull")) {
+                    assertEquals(preparedStatementDelegator.getParameters().get(params[0]), "null, type:${params[1]}");
+                } else if (methodName.equals("setBytes")) {
+                    assertEquals(preparedStatementDelegator.getParameters().get(params[0]), new String(params[1]));
+                } else if (params[1] instanceof Reader) {
+                    String expResult = "[${methodName.replaceFirst("set", "")}-Reader]"
+                    if (params.length > 2) {
+                        expResult += "-${params[2..params.length - 1].join("-")}"
                     }
+                    assertEquals(preparedStatementDelegator.getParameters().get(params[0]), expResult);
+                } else if (params[1] instanceof InputStream) {
+                    String expResult = "[${methodName.replaceFirst("set", "")}-InputStream]"
+                    if (params.length > 2) {
+                        expResult += "-${params[2..params.length - 1].join("-")}"
+                    }
+                    assertEquals(preparedStatementDelegator.getParameters().get(params[0]), expResult);
+                } else {
+                    assertEquals(preparedStatementDelegator.getParameters().get(params[0]), params[1..params.length - 1].join("-"));
                 }
-                assertEquals(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]), "[" + expResult.toString() + "]");
-            } else {
-                assertEquals(((PreparedStatementWrapper) wrapper).getParameters().get(params[0]), params[1]);
+
             }
         }
-
     }
 
-    protected abstract W getWrapperInstance(ISQLInjectionAnalyzer analyzer, B mockBasicClass);
+    protected abstract B getDelegatorInstance(ISQLInjectionAnalyzer analyzer, B mockBasicClass);
 
     private Class<B> getBasicClass() throws ClassNotFoundException {
         Type mySuperclass = this.getClass().getGenericSuperclass();
@@ -138,9 +134,18 @@ public abstract class AbstractWrapperTest<B extends Wrapper, W extends B> {
         return params.toArray();
     }
 
+    private void addInterfaces(Class<?> clazz, List<Object[]> result) {
+        if (clazz != null && clazz != Wrapper.class) {
+            addMethodsFromInterface(clazz, result);
+            if (ArrayUtils.isNotEmpty(clazz.getInterfaces())) {
+                for (Class<?> superClazz : clazz.getInterfaces()) {
+                    addInterfaces(superClazz, result);
+                }
+            }
+        }
+    }
+
     private void addMethodsFromInterface(Class<?> clazz, List<Object[]> result) {
-        Arrays.asList(clazz.getDeclaredMethods())
-                .stream()
-                .forEach(m -> result.add(new Object[]{m}));
+        clazz.getDeclaredMethods().each { m -> result.add([m] as Object[]) };
     }
 }
