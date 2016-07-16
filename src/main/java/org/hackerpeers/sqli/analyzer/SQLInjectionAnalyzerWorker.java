@@ -1,15 +1,22 @@
 package org.hackerpeers.sqli.analyzer;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hackerpeers.sqli.config.ISQLIAnalyzerConfig;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Asynchronous analyzer of SQL statement.
@@ -45,19 +52,10 @@ public class SQLInjectionAnalyzerWorker implements Runnable {
         this.cfg = cfg;
         this.repo = repo;
         this.entryPoint = entryPoint;
-        if (sql != null) {
-            this.statements = new ArrayList<>(sql);
-        }
-        if (params != null) {
-            this.params = new ArrayList<>();
-            for (Map<Object, Object> p : params) {
-                if (p == null) {
-                    this.params.add(null);
-                } else {
-                    this.params.add(new TreeMap<>(p));
-                }
-            }
-        }
+        this.statements = new ArrayList<>(CollectionUtils.emptyIfNull(sql));
+        this.params = CollectionUtils.emptyIfNull(params).stream()
+                            .map(p -> new TreeMap<>(MapUtils.emptyIfNull(p)))
+                            .collect(Collectors.toList());
         this.start = start;
         this.end = end;
         this.sourceThread = sourceThread.toString();
@@ -69,61 +67,56 @@ public class SQLInjectionAnalyzerWorker implements Runnable {
      * and the SQLIDriver configuration.
      * @return The SQL request entry : <classname> (method: <methodname>, line: <line>)
      */
-    private String getEntryClass(StackTraceSnapshot entryPoint) {
+    String getEntryClass(StackTraceSnapshot entryPoint) {
         StackTraceElement[] stackTrace = entryPoint.getStackTrace();
-        String className = null;
-        for (StackTraceElement stackTraceElement : stackTrace) {
-            for (String packages : cfg.getAnalyzerEntrypointPackages()) {
-                if (stackTraceElement.getClassName().startsWith(packages)) {
-                    className = String.format("%s#%s() (line: %s)",
-                            stackTraceElement.getClassName(),
-                            stackTraceElement.getMethodName(),
-                            stackTraceElement.getLineNumber());
-                    break;
-                }
-            }
-            if (StringUtils.isNotBlank(className)) {
-                break;
-            }
+
+        Optional<StackTraceElement> found = Arrays.stream(stackTrace)
+                                                .filter(s -> StringUtils.startsWithAny(s.getClassName(), cfg.getAnalyzerEntrypointPackages().stream().toArray(size -> new String[size])))
+                                                .findFirst();
+
+        if (found.isPresent()) {
+            return String.format("%s#%s() (line: %s)",
+                    found.get().getClassName(),
+                    found.get().getMethodName(),
+                    found.get().getLineNumber());
         }
 
-        return (className == null ? "Not found" : className);
+        return "Not found";
     }
 
     @Override
     public void run() {
-        if (statements != null) {
-            log();
+        log();
 
-            String entryPoint = getEntryClass(this.entryPoint);
-            // Skip elements from safezone
-            for (String safezone : cfg.getAnalyzerEntrypointSafezones()) {
-                if (StringUtils.isNotBlank(safezone)
-                        && StringUtils.startsWith(entryPoint, safezone)) {
-                    return; // The element does not need to be analyzed.
-                }
-            }
-
-            for (String statement : statements) {
-                // Apply RegEx simplifiers
-                for (Map.Entry<String, String> regex : cfg.getAnalyzerRegexSimplifiers().entrySet()) {
-                    statement = statement.replaceAll(regex.getKey(), regex.getValue());
-                }
-
-                // Apply IN Clause simplifier
-                statement = statement.replaceAll("[\\s]*,[\\s]*\\?", ",?");
-                int inClauseVariant = StringUtils.countMatches(statement, ",?");
-                statement = statement.replaceAll(",\\?", ""); // Remove extra ,? in IN clause.
-                inClauseVariant = statement.matches("^(.+)[iI][nN][\\s]*\\((.*)$") ? inClauseVariant + 1 : 0;
-
-                // Store statement for the entry point.
-                try {
-                    repo.addStatement(entryPoint, statement, inClauseVariant);
-                } catch (IOException ioe) {
-                    Logger.getLogger(SQLInjectionAnalyzerImpl.class.getName()).log(Level.SEVERE, "Failed to store result on disk.", ioe);
-                }
-            }
+        String entryPoint = getEntryClass(this.entryPoint);
+        // Skip elements from safezone
+        if (StringUtils.startsWithAny(entryPoint, cfg.getAnalyzerEntrypointSafezones().toArray(new String[0]))) {
+            return;
         }
+
+        // This weird part creates a chain of "regex replace" and chains them into one big function to be reused a few lines down.
+        Function<String, String> regexChain = cfg.getAnalyzerRegexSimplifiers().entrySet().stream()
+                                                        .map(entry -> (Function<String, String>) (e -> e.replaceAll(entry.getKey(), entry.getValue())))
+                                                        .reduce(
+                                                                Function.identity(),
+                                                                (k, v) -> k.andThen(v));
+        statements.stream()
+                .map(regexChain)
+                .map(s -> s.replaceAll("[\\s]*,[\\s]*\\?", ",?"))
+                .forEach(s ->
+                        {
+                            int inClauseVariant = StringUtils.countMatches(s, ",?");
+                            s = s.replaceAll(",\\?", ""); // Remove extra ,? in IN clause.
+                            inClauseVariant = s.matches("^(.+)[iI][nN][\\s]*\\((.*)$") ? inClauseVariant + 1 : 0;
+
+                            // Store statement for the entry point.
+                            try {
+                                repo.addStatement(entryPoint, s, inClauseVariant);
+                            } catch (IOException ioe) {
+                                Logger.getLogger(SQLInjectionAnalyzerImpl.class.getName()).log(Level.SEVERE, "Failed to store result on disk.", ioe);
+                            }
+                        }
+                );
     }
 
     /**
@@ -132,22 +125,19 @@ public class SQLInjectionAnalyzerWorker implements Runnable {
     private void log() {
         long elapse = end - start;
         Level level = getLogLevel(elapse);
-        if (logger.isLoggable(level)) {
-            String logTemplate = String.format("\t%s (thread id:%s) -- %%s %s",
-                    sourceThread, sourceThreadId,
-                    System.getProperty("line.separator"));
+        if (logger.isLoggable(level) && ! statements.isEmpty()) {
+            String logTemplate = String.format("\t%s (thread id:%s) -- %%s %s", sourceThread, sourceThreadId, System.getProperty("line.separator"));
             StringBuilder buf = new StringBuilder();
             buf.append(String.format(logTemplate, String.format("============= Begin : SQL Injection Analyzer <%s> =================", entryPoint)));
             buf.append(String.format(logTemplate, "Query total time (millisecond) : " + elapse));
-            for (int i = 0; i < statements.size(); i++) {
-                buf.append(String.format(logTemplate, statements.get(i)));
-                if (params != null && params.get(i) != null) {
-                    Map<Object, Object> p = params.get(i);
-                    for (Map.Entry<Object, Object> entry : p.entrySet()) {
-                        buf.append(String.format(logTemplate,
-                                String.format("\t%s => [%s] (%s)",
-                                entry.getKey(), entry.getValue(), (entry.getValue() == null ? "unknown" : entry.getValue().getClass().getName()))));
-                    }
+
+            Iterator<String> sIterator = statements.iterator();
+            Iterator<Map<Object, Object>> pIterator = params.iterator();
+            while(sIterator.hasNext() && pIterator.hasNext()) {
+                buf.append(String.format(logTemplate, sIterator.next()));
+                for (Map.Entry<Object, Object> entry : pIterator.next().entrySet()) {
+                    buf.append(String.format(logTemplate,
+                            String.format("\t%s => [%s] (%s)", entry.getKey(), entry.getValue(), (entry.getValue() == null ? "unknown" : entry.getValue().getClass().getName()))));
                 }
             }
 
@@ -163,47 +153,47 @@ public class SQLInjectionAnalyzerWorker implements Runnable {
      */
     private Level getLogLevel(long elapse) {
         Level level = Level.OFF;
-        if (cfg.getAnalyzerLogThresholdSevere() != -1
-                && elapse >= cfg.getAnalyzerLogThresholdSevere()) {
+        if (isGreaterThanThreshold(cfg.getAnalyzerLogThresholdSevere(), elapse)) {
             level = Level.SEVERE;
-        } else if (cfg.getAnalyzerLogThresholdWarning() != -1
-                && elapse >= cfg.getAnalyzerLogThresholdWarning()) {
+        } else if (isGreaterThanThreshold(cfg.getAnalyzerLogThresholdWarning(), elapse)) {
             level = Level.WARNING;
-        } else if (cfg.getAnalyzerLogThresholdInfo() != -1
-                && elapse >= cfg.getAnalyzerLogThresholdInfo()) {
+        } else if (isGreaterThanThreshold(cfg.getAnalyzerLogThresholdInfo(), elapse)) {
             level = Level.INFO;
-        } else if (cfg.getAnalyzerLogThresholdFine() != -1
-                && elapse >= cfg.getAnalyzerLogThresholdFine()) {
+        } else if (isGreaterThanThreshold(cfg.getAnalyzerLogThresholdFine(), elapse)) {
             level = Level.FINE;
         }
         return level;
     }
 
-    protected ISQLIAnalyzerConfig getCfg() {
+    private boolean isGreaterThanThreshold(long threshold, long value) {
+        return threshold != -1 && value >= threshold;
+    }
+
+    ISQLIAnalyzerConfig getCfg() {
         return cfg;
     }
 
-    protected ISQLInjectionRepository getRepo() {
+    ISQLInjectionRepository getRepo() {
         return repo;
     }
 
-    protected StackTraceSnapshot getEntryPoint() {
+    StackTraceSnapshot getEntryPoint() {
         return entryPoint;
     }
 
-    protected List<String> getStatements() {
+    List<String> getStatements() {
         return statements;
     }
 
-    protected List<Map<Object, Object>> getParams() {
+    List<Map<Object, Object>> getParams() {
         return params;
     }
 
-    protected long getStart() {
+    long getStart() {
         return start;
     }
 
-    protected long getEnd() {
+    long getEnd() {
         return end;
     }
 }
