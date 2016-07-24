@@ -94,14 +94,8 @@ public class SQLInjectionAnalyzerWorker implements Runnable {
             return;
         }
 
-        // This weird part creates a chain of "regex replace" and chains them into one big function to be reused a few lines down.
-        Function<String, String> regexChain = cfg.getAnalyzerRegexSimplifiers().entrySet().stream()
-                                                        .map(entry -> (Function<String, String>) (e -> e.replaceAll(entry.getKey(), entry.getValue())))
-                                                        .reduce(
-                                                                Function.identity(),
-                                                                (k, v) -> k.andThen(v));
         statements.stream()
-                .map(regexChain)
+                .map(buildSQLStatementRegexReplaceChain(cfg.getAnalyzerRegexSimplifiers()))
                 .map(s -> s.replaceAll("[\\s]*,[\\s]*\\?", ",?"))
                 .forEach(s ->
                         {
@@ -117,6 +111,19 @@ public class SQLInjectionAnalyzerWorker implements Runnable {
                             }
                         }
                 );
+    }
+
+    /**
+     * This weird part creates a chain of "regex replace" and chains them into one big function to be reused a few lines down.
+     * @param regexes Map containing the list of string to map from (key) and to (value).
+     * @return Function that will apply all configured regex to the given input SQL string.
+     */
+    Function<String, String> buildSQLStatementRegexReplaceChain(Map<String, String> regexes) {
+        return regexes.entrySet().stream()
+                .map(entry -> (Function<String, String>) (e -> e.replaceAll(entry.getKey(), entry.getValue())))
+                .reduce(
+                        Function.identity(),
+                        (k, v) -> k.andThen(v));
     }
 
     /**
